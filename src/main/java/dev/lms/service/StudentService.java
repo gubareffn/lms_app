@@ -27,7 +27,6 @@ public class StudentService {
             throw new IllegalArgumentException("Email already exists");
         }
         student.setPassword(passwordEncoder.encode(student.getPassword()));
-
         return studentRepository.save(student);
     }
 }

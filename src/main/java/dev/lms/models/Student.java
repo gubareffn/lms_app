@@ -23,7 +23,7 @@ public class Student {
     @Column(name = "second_name", nullable = false, length = 50)
     private String middleName;
 
-    @Column(name = "password", nullable = false, length = 30)
+    @Column(name = "password", nullable = false, length = 64)
     private String password;
 
     @Column(name = "email", nullable = false, length = 50, unique = true)

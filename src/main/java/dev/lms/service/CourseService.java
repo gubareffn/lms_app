@@ -20,6 +20,4 @@ public class CourseService {
                 .map(CourseShortDto::new)
                 .collect(Collectors.toList());
     }
-
-
 }

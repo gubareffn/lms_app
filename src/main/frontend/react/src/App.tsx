@@ -7,6 +7,8 @@ import { HomePage } from './pages/HomePage';
 
 import './App.css';
 import CourseList from "./pages/CourseList";
+import SignInPage from"./pages/SignInPage";
+import SignUpPage from"./pages/SignUpPage";
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
             <Route path="/" element={<HomePage />} />
             {/*<Route path="/profile" element={<ProfilePage />} />*/}
             <Route path="/courses" element={<CourseList />} />
+              <Route path="/login" element={<SignInPage />} />
+              <Route path="/sign-up" element={<SignUpPage />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>

@@ -74,7 +74,7 @@ export default function AppBarWithDrawer() {
                         <Button
                             color="inherit"
                             component={Link}
-                            to="/register"
+                            to="/sign-up"
                             sx={{
                                 textTransform: 'none',
                                 border: '1px solid rgba(255, 255, 255, 0.5)',

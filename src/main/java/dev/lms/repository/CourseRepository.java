@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-// CourseRepository.java
 public interface CourseRepository extends JpaRepository<Course, Long> {
 
     @Query("SELECT c FROM Course c JOIN FETCH c.status JOIN FETCH c.category")

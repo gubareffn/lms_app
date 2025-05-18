@@ -5,18 +5,14 @@ import {
     Toolbar,
     Typography,
     Button,
-    IconButton,
-    Drawer,
-    List,
-    Divider,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText
+
 } from '@mui/material';
 import { Link } from 'react-router-dom';
+import LoginModal from "../../pages/SignInPage";
+import {useState} from "react";
 
 export default function AppBarWithDrawer() {
+    const [loginOpen, setLoginOpen] = useState(false);
 
     return (
         <Box sx={{ flexGrow: 1 }}>
@@ -65,8 +61,7 @@ export default function AppBarWithDrawer() {
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button
                             color="inherit"
-                            component={Link}
-                            to="/login"
+                            onClick={() => setLoginOpen(true)}
                             sx={{ textTransform: 'none' }}
                         >
                             Вход
@@ -87,7 +82,10 @@ export default function AppBarWithDrawer() {
                     </Box>
                 </Toolbar>
             </AppBar>
-
+            <LoginModal
+                open={loginOpen}
+                onClose={() => setLoginOpen(false)}
+            />
         </Box>
     );
 }

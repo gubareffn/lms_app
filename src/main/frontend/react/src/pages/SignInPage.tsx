@@ -10,15 +10,21 @@ import {
     InputAdornment,
     Link,
     Alert,
-    IconButton, Snackbar,
+    IconButton,
+    Snackbar,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Box
 } from '@mui/material';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { AppProvider } from '@toolpad/core/AppProvider';
-import { SignInPage, AuthProvider, AuthResponse } from '@toolpad/core/SignInPage';
+import { AuthProvider, AuthResponse } from '@toolpad/core/SignInPage';
 import { useTheme } from '@mui/material/styles';
-import {useState} from "react";
+import { useState } from "react";
 import axios from "axios";
 
 const providers = [{ id: 'credentials', name: 'Email and Password' }];
@@ -39,14 +45,12 @@ function CustomEmailField() {
             size="small"
             required
             fullWidth
-            slotProps={{
-                input: {
-                    startAdornment: (
-                        <InputAdornment position="start">
-                            <AccountCircle fontSize="inherit" />
-                        </InputAdornment>
-                    ),
-                },
+            InputProps={{
+                startAdornment: (
+                    <InputAdornment position="start">
+                        <AccountCircle fontSize="inherit" />
+                    </InputAdornment>
+                ),
             }}
             variant="outlined"
         />
@@ -131,14 +135,6 @@ function Title() {
     return <h2 style={{ marginBottom: 8 }}>Войти</h2>;
 }
 
-// function Subtitle() {
-//     return (
-//         <Alert sx={{ mb: 2, px: 1, py: 0.25, width: '100%' }} severity="warning">
-//             We are investigating an ongoing outage.
-//         </Alert>
-//     );
-// }
-
 function RememberMeCheckbox() {
     const theme = useTheme();
     return (
@@ -152,9 +148,9 @@ function RememberMeCheckbox() {
                     sx={{ padding: 0.5, '& .MuiSvgIcon-root': { fontSize: 20 } }}
                 />
             }
-            slotProps={{
-                typography: {
-                    color: 'textSecondary',
+            sx={{
+                '& .MuiTypography-root': {
+                    color: 'text.secondary',
                     fontSize: theme.typography.pxToRem(14),
                 },
             }}
@@ -162,7 +158,12 @@ function RememberMeCheckbox() {
     );
 }
 
-function SlotsSignIn() {
+interface LoginModalProps {
+    open: boolean;
+    onClose: () => void;
+}
+
+function LoginModal({ open, onClose }: LoginModalProps) {
     const theme = useTheme();
     const [error, setError] = useState('');
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -185,10 +186,12 @@ function SlotsSignIn() {
                 firstName: response.data.firstName
             }));
 
-            // Возвращаем успешный AuthResponse
+            // Закрываем модальное окно после успешного входа
+            onClose();
+
             return {
                 error: null,
-                url: '/' // Используем callbackUrl если он есть
+                url: callbackUrl || '/'
             };
 
         } catch (err) {
@@ -199,7 +202,6 @@ function SlotsSignIn() {
             setError(errorMessage);
             setSnackbarOpen(true);
 
-            // Возвращаем AuthResponse с ошибкой
             return {
                 error: errorMessage,
                 url: null
@@ -208,30 +210,43 @@ function SlotsSignIn() {
     };
 
     return (
-        <AppProvider theme={theme}>
-            <SignInPage
-                signIn={handleLogin}
-                slots={{
-                    title: Title,
-                    emailField: CustomEmailField,
-                    passwordField: CustomPasswordField,
-                    submitButton: CustomButton,
-                    signUpLink: SignUpLink,
-                    rememberMe: RememberMeCheckbox,
-                    forgotPasswordLink: ForgotPasswordLink,
-                }}
-                slotProps={{ form: { noValidate: true } }}
-                providers={providers}
-            />
+        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+            <DialogTitle>
+                <Title />
+            </DialogTitle>
+            <DialogContent>
+                <Box
+                    component="form"
+                    onSubmit={async (e: React.FormEvent<HTMLFormElement>) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.currentTarget);
+                        await handleLogin(providers[0], formData);
+                    }}
+                    noValidate
+                >
+                    <CustomEmailField />
+                    <CustomPasswordField />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <RememberMeCheckbox />
+                        <ForgotPasswordLink />
+                    </Box>
+                    <CustomButton />
+                </Box>
+                <Box sx={{ textAlign: 'center', mt: 2 }}>
+                    <SignUpLink />
+                </Box>
+            </DialogContent>
 
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={6000}
                 onClose={() => setSnackbarOpen(false)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
             >
                 <Alert severity="error">{error}</Alert>
             </Snackbar>
-        </AppProvider>
+        </Dialog>
     );
 }
-export default SlotsSignIn;
+
+export default LoginModal;

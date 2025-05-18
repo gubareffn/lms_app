@@ -1,8 +1,6 @@
 package dev.lms.repository;
 
-import dev.lms.models.Course;
 import dev.lms.models.Student;
-import org.apache.catalina.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -16,4 +14,5 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     Optional<Student> findByEmail(String email);
 
+    boolean existsByEmail(String email);
 }

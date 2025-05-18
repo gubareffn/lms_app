@@ -10,16 +10,24 @@ import {
     InputAdornment,
     Link,
     Alert,
-    IconButton,
+    IconButton, Snackbar,
 } from '@mui/material';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { AppProvider } from '@toolpad/core/AppProvider';
-import { SignInPage } from '@toolpad/core/SignInPage';
+import { SignInPage, AuthProvider, AuthResponse } from '@toolpad/core/SignInPage';
 import { useTheme } from '@mui/material/styles';
+import {useState} from "react";
+import axios from "axios";
 
 const providers = [{ id: 'credentials', name: 'Email and Password' }];
+interface LoginResponse {
+    token: string;
+    id: string;
+    email: string;
+    firstName: string;
+}
 
 function CustomEmailField() {
     return (
@@ -154,19 +162,57 @@ function RememberMeCheckbox() {
     );
 }
 
-export default function SlotsSignIn() {
+function SlotsSignIn() {
     const theme = useTheme();
+    const [error, setError] = useState('');
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+    const handleLogin = async (
+        provider: AuthProvider,
+        formData?: FormData,
+        callbackUrl?: string
+    ): Promise<{ error: any; url: any }> => {
+        try {
+            const response = await axios.post<LoginResponse>('http://localhost:8080/api/auth/login', {
+                email: formData?.get('email'),
+                password: formData?.get('password')
+            });
+
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user', JSON.stringify({
+                id: response.data.id,
+                email: response.data.email,
+                firstName: response.data.firstName
+            }));
+
+            // Возвращаем успешный AuthResponse
+            return {
+                error: null,
+                url: '/' // Используем callbackUrl если он есть
+            };
+
+        } catch (err) {
+            const errorMessage = axios.isAxiosError(err)
+                ? err.response?.data?.message || 'Неверный email или пароль'
+                : 'Ошибка при входе';
+
+            setError(errorMessage);
+            setSnackbarOpen(true);
+
+            // Возвращаем AuthResponse с ошибкой
+            return {
+                error: errorMessage,
+                url: null
+            };
+        }
+    };
+
     return (
         <AppProvider theme={theme}>
             <SignInPage
-                signIn={(provider, formData) =>
-                    alert(
-                        `Logging in with "${provider.name}" and credentials: ${formData.get('email')}, ${formData.get('password')}, and checkbox value: ${formData.get('remember')}`,
-                    )
-                }
+                signIn={handleLogin}
                 slots={{
                     title: Title,
-                    // subtitle: Subtitle,
                     emailField: CustomEmailField,
                     passwordField: CustomPasswordField,
                     submitButton: CustomButton,
@@ -177,6 +223,15 @@ export default function SlotsSignIn() {
                 slotProps={{ form: { noValidate: true } }}
                 providers={providers}
             />
+
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={6000}
+                onClose={() => setSnackbarOpen(false)}
+            >
+                <Alert severity="error">{error}</Alert>
+            </Snackbar>
         </AppProvider>
     );
 }
+export default SlotsSignIn;

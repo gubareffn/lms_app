@@ -1,7 +1,11 @@
 package dev.lms.controllers;
 
 import dev.lms.models.Student;
+import dev.lms.repository.StudentRepository;
 import dev.lms.service.StudentService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,10 +14,33 @@ import java.util.List;
 @RequestMapping("/api/students")
 public class StudentController {
     private final StudentService studentService;
+    private final StudentRepository studentRepository;
 
-    public StudentController(StudentService studentService) {
+    public StudentController(StudentService studentService, StudentRepository studentRepository) {
         this.studentService = studentService;
+        this.studentRepository = studentRepository;
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<StudentProfileDto> getProfile(Authentication authentication) {
+        String email = authentication.getName();
+        Student student = studentRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Student not found"));
+
+        return ResponseEntity.ok(new StudentProfileDto(
+                student.getFirstName(),
+                student.getLastName(),
+                student.getMiddleName(),
+                student.getEmail()
+        ));
+    }
+
+    record StudentProfileDto(
+            String firstName,
+            String lastName,
+            String middleName,
+            String email
+    ) {}
 
     @GetMapping
     public List<Student> getStudents() {

@@ -7,8 +7,9 @@ import { HomePage } from './pages/HomePage';
 
 import './App.css';
 import CourseList from "./pages/CourseList";
-import SignInPage from"./pages/SignInPage";
-import SignUpPage from"./pages/SignUpPage";
+import SignInPage from "./pages/SignInPage";
+import SignUpPage from "./pages/SignUpPage";
+// import StudentProfile from "./pages/StudentProfile";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/courses" element={<CourseList />} />
               <Route path="/login" element={<SignInPage />} />
               <Route path="/sign-up" element={<SignUpPage />} />
+              {/*<Route path="/student-profile" element={<StudentProfile />} />*/}
           </Routes>
         </BrowserRouter>
       </ThemeProvider>

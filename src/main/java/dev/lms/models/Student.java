@@ -3,6 +3,10 @@ package dev.lms.models;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collections;
 
 @Entity
 @Table(name="student")
@@ -28,6 +32,14 @@ public class Student {
 
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email;
+
+    public UserDetails toUserDetails() {
+        return new org.springframework.security.core.userdetails.User(
+                this.email,
+                this.password,
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_STUDENT"))
+        );
+    }
 
 //    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
 //    private Passport passport;

@@ -5,6 +5,7 @@ import lombok.Setter;
 import dev.lms.models.Course;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 // CourseDetailsDto.java
 @Getter

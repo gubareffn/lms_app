@@ -27,6 +27,7 @@ function App() {
                     <Route path="/courses/:id" element={<CoursePage />} />
                     {/*<Route path="/login" element={<SignInPage/>}/>*/}
                     <Route path="/sign-up" element={<SignUpPage/>}/>
+
                     {/*<Route path="/student-profile" element={<StudentProfile />} />*/}
                 </Routes>
             </BrowserRouter>

@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 import LoginModal from "../../pages/SignInPage";
 import {useState} from "react";
 
-export default function AppBarWithDrawer() {
+export default function NavigationBar() {
     const [loginOpen, setLoginOpen] = useState(false);
 
     return (

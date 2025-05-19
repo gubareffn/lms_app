@@ -5,8 +5,7 @@ import  AppBar  from '../components/Layout/AppBar';
 export const HomePage = () => {
     return (
         <>
-            <AppBar />
-            <Container maxWidth="lg">
+            <AppBar /><Container maxWidth="lg">
                 <Box sx={{ my: 4, textAlign: 'center' }}>
                     <Typography variant="h4" gutterBottom>
                         Система профессионального образования

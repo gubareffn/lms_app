@@ -26,6 +26,7 @@ import { AuthProvider, AuthResponse } from '@toolpad/core/SignInPage';
 import { useTheme } from '@mui/material/styles';
 import { useState } from "react";
 import axios from "axios";
+import {useAuth} from "../components/AuthContext";
 
 const providers = [{ id: 'credentials', name: 'Email and Password' }];
 interface LoginResponse {
@@ -117,7 +118,7 @@ function CustomButton() {
 
 function SignUpLink() {
     return (
-        <Link href="/" variant="body2">
+        <Link href="/sign-up" variant="body2">
             Регистрация
         </Link>
     );
@@ -164,6 +165,7 @@ interface LoginModalProps {
 }
 
 function LoginModal({ open, onClose }: LoginModalProps) {
+    const { login } = useAuth(); // Добавьте эту строку
     const theme = useTheme();
     const [error, setError] = useState('');
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -179,14 +181,13 @@ function LoginModal({ open, onClose }: LoginModalProps) {
                 password: formData?.get('password')
             });
 
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify({
+            const userData = {
+                token: response.data.token,
                 id: response.data.id,
-                email: response.data.email,
-                firstName: response.data.firstName
-            }));
+                email: response.data.email
+            };
 
-            // Закрываем модальное окно после успешного входа
+            await login(userData);
             onClose();
 
             return {

@@ -10,9 +10,11 @@ import {
 import { Link } from 'react-router-dom';
 import LoginModal from "../../pages/SignInPage";
 import {useState} from "react";
+import {useAuth} from "../AuthContext";
 
 export default function NavigationBar() {
     const [loginOpen, setLoginOpen] = useState(false);
+    const { isAuthenticated, user, logout } = useAuth();
 
     return (
         <Box sx={{ flexGrow: 1 }}>
@@ -59,13 +61,21 @@ export default function NavigationBar() {
 
                     {/* Кнопки авторизации (справа) */}
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                            color="inherit"
-                            onClick={() => setLoginOpen(true)}
-                            sx={{ textTransform: 'none' }}
-                        >
-                            Вход
-                        </Button>
+                        {isAuthenticated ? (
+                            <div>
+                                <span>{user?.email}</span>
+                                <Button color="inherit" onClick={logout}>
+                                    Выйти
+                                </Button>
+                            </div>
+                        ) : (<Button
+                                color="inherit"
+                                onClick={() => setLoginOpen(true)}
+                                sx={{textTransform: 'none'}}
+                            >
+                                Вход
+                            </Button>
+                        )}
                         <Button
                             color="inherit"
                             component={Link}

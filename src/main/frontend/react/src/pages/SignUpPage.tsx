@@ -12,18 +12,18 @@ import {
 import axios from 'axios';
 
 interface StudentFormData {
-    lastName: string;
-    firstName: string;
-    middleName: string;
+    surname: string;
+    name: string;
+    secondName: string;
     password: string;
     email: string;
 }
 
 const SignUpPage = () => {
     const [formData, setFormData] = useState<StudentFormData>({
-        lastName: '',
-        firstName: '',
-        middleName: '',
+        surname: '',
+        name: '',
+        secondName: '',
         email: '',
         password: ''
     });
@@ -44,10 +44,10 @@ const SignUpPage = () => {
         setError('');
 
         try {
-            const response = await axios.post('http://localhost:8080/api/students', {
-                lastName: formData.lastName,
-                firstName: formData.firstName,
-                middleName: formData.middleName,
+            const response = await axios.post('http://localhost:8080/api/auth/register', {
+                surname: formData.surname,
+                name: formData.name,
+                secondName: formData.secondName,
                 password: formData.password,
                 email: formData.email
             });
@@ -56,9 +56,9 @@ const SignUpPage = () => {
             setSnackbarOpen(true);
 
             setFormData({
-                lastName: '',
-                firstName: '',
-                middleName: '',
+                surname: '',
+                name: '',
+                secondName: '',
                 email: '',
                 password: ''
             });
@@ -100,8 +100,8 @@ const SignUpPage = () => {
                         fullWidth
                         margin="normal"
                         label="Фамилия"
-                        name="lastName"
-                        value={formData.lastName}
+                        name="surname"
+                        value={formData.surname}
                         onChange={handleChange}
                         required
                     />
@@ -110,8 +110,8 @@ const SignUpPage = () => {
                         fullWidth
                         margin="normal"
                         label="Имя"
-                        name="firstName"
-                        value={formData.firstName}
+                        name="name"
+                        value={formData.name}
                         onChange={handleChange}
                         required
                     />
@@ -120,8 +120,8 @@ const SignUpPage = () => {
                         fullWidth
                         margin="normal"
                         label="Отчество"
-                        name="middleName"
-                        value={formData.middleName}
+                        name="secondName"
+                        value={formData.secondName}
                         onChange={handleChange}
                         required
                     />

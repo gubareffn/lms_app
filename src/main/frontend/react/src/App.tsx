@@ -10,10 +10,11 @@ import CourseList from "./pages/CourseList";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import CoursePage from "./pages/CoursePage";
+import { useAuth } from './components/AuthContext';
 // import StudentProfile from "./pages/StudentProfile";
 
 function App() {
-
+    const { isAuthenticated, user, logout } = useAuth();
     //const [logged] = useAuth();
 
     return (

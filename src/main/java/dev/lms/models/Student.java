@@ -7,6 +7,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name="student")
@@ -46,10 +48,10 @@ public class Student {
 //
 //    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
 //    private Set<Document> documents = new HashSet<>();
-//
-//    @OneToMany(mappedBy = "student")
-//    private Set<Request> requests = new HashSet<>();
-//
+
+    @OneToMany(mappedBy = "student")
+    private Set<Request> requests = new HashSet<>();
+
 //    @OneToMany(mappedBy = "student")
 //    private Set<Solution> solutions = new HashSet<>();
 }

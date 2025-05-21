@@ -62,33 +62,42 @@ export default function NavigationBar() {
                     {/* Кнопки авторизации (справа) */}
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         {isAuthenticated ? (
-                            <div>
-                                <span>{user?.email}</span>
-                                <Button color="inherit" onClick={logout}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="body1" sx={{ color: 'inherit' }}>
+                                    {user?.email}
+                                </Typography>
+                                <Button
+                                    color="inherit"
+                                    onClick={logout}
+                                    sx={{ textTransform: 'none' }}
+                                >
                                     Выйти
                                 </Button>
-                            </div>
-                        ) : (<Button
-                                color="inherit"
-                                onClick={() => setLoginOpen(true)}
-                                sx={{textTransform: 'none'}}
-                            >
-                                Вход
-                            </Button>
+                            </Box>
+                        ) : (
+                            <>
+                                <Button
+                                    color="inherit"
+                                    onClick={() => setLoginOpen(true)}
+                                    sx={{ textTransform: 'none' }}
+                                >
+                                    Вход
+                                </Button>
+                                <Button
+                                    color="inherit"
+                                    component={Link}
+                                    to="/sign-up"
+                                    sx={{
+                                        textTransform: 'none',
+                                        border: '1px solid rgba(255, 255, 255, 0.5)',
+                                        borderRadius: 1,
+                                        px: 2
+                                    }}
+                                >
+                                    Регистрация
+                                </Button>
+                            </>
                         )}
-                        <Button
-                            color="inherit"
-                            component={Link}
-                            to="/sign-up"
-                            sx={{
-                                textTransform: 'none',
-                                border: '1px solid rgba(255, 255, 255, 0.5)',
-                                borderRadius: 1,
-                                px: 2
-                            }}
-                        >
-                            Регистрация
-                        </Button>
                     </Box>
                 </Toolbar>
             </AppBar>

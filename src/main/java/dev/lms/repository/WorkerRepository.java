@@ -1,0 +1,23 @@
+package dev.lms.repository;
+
+
+import dev.lms.models.Student;
+import dev.lms.models.Worker;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface WorkerRepository extends JpaRepository<Worker, Long> {
+    @Query("SELECT w FROM Worker w JOIN FETCH w.role where w.role.id=1")
+    List<Worker> findAllTeachers();
+
+    @Query("SELECT w FROM Worker w JOIN FETCH w.role where w.role.id=2")
+    List<Worker> findAllAdmins();
+
+    @Query("SELECT w FROM Worker w JOIN FETCH w.role")
+    List<Worker> findAllWithRoles();
+
+    Optional<Worker> findByEmail(String email);
+}

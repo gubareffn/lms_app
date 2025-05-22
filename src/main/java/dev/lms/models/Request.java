@@ -33,6 +33,10 @@ public class Request {
     private Student student;
 
     @ManyToOne
+    @JoinColumn(name = "worker_id", nullable = false)
+    private Worker worker;
+
+    @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 

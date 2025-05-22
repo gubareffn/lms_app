@@ -42,16 +42,19 @@ public class StudentController {
             String email
     ) {}
 
+    // Получение всех студентов
     @GetMapping
     public List<Student> getStudents() {
         return studentService.getAllStudents();
     }
 
+    // Добавление студента
     @PostMapping
     public Student addStudent(@RequestBody Student student) {
         return studentService.createStudent(student);
     }
 
+    // Заглушка для обновления студента
     @PutMapping
     public Student updateStudent(@RequestBody Student student) {
         return null;

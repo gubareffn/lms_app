@@ -29,4 +29,6 @@ public class StudentService {
         student.setPassword(passwordEncoder.encode(student.getPassword()));
         return studentRepository.save(student);
     }
+
+
 }

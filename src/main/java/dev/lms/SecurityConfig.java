@@ -1,7 +1,6 @@
 package dev.lms;
 
 import dev.lms.jwt.JwtFilter;
-import dev.lms.service.StudentDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -22,11 +21,9 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
     private final JwtFilter jwtAuthFilter;
-    private final StudentDetailsService studentDetailsService;
 
-    public SecurityConfig(JwtFilter jwtAuthFilter, StudentDetailsService studentDetailsService) {
+    public SecurityConfig(JwtFilter jwtAuthFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
-        this.studentDetailsService = studentDetailsService;
     }
 
     @Bean
@@ -57,14 +54,6 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-    }
-
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(studentDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
     }
 
     @Bean

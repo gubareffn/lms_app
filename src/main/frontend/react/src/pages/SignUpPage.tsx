@@ -44,7 +44,7 @@ const SignUpPage = () => {
         setError('');
 
         try {
-            const response = await axios.post('http://localhost:8080/api/auth/register', {
+            const response = await axios.post('http://localhost:8080/api/auth/register/student', {
                 surname: formData.surname,
                 name: formData.name,
                 secondName: formData.secondName,

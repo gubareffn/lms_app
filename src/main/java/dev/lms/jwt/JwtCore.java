@@ -25,10 +25,11 @@ public class JwtCore {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String email, Integer studentId) {
+    public String generateToken(String email, Integer userId, String userType, String role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("id", studentId);
-        claims.put("role", "STUDENT");
+        claims.put("id", userId);
+        claims.put("role", role);
+        claims.put("userType", userType);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -58,6 +59,24 @@ public class JwtCore {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public String getRoleFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("role", String.class);
+    }
+
+    public String getUserTypeFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("userType", String.class);
     }
 
     public String getEmailFromToken(String token) {

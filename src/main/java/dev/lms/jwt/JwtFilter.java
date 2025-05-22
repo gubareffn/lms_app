@@ -1,12 +1,13 @@
 package dev.lms.jwt;
 
-import dev.lms.service.StudentDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -14,13 +15,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtCore jwtTokenUtil;
-    private final StudentDetailsService studentDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -29,31 +30,36 @@ public class JwtFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userEmail;
+        final String jwtToken;
+
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
-        userEmail = jwtTokenUtil.getEmailFromToken(jwt);
+        jwtToken = authHeader.substring(7);
+        Authentication auth = null;
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.studentDetailsService.loadUserByUsername(userEmail);
-            if (jwtTokenUtil.validateToken(jwt)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
+        if (jwtToken != null && jwtTokenUtil.validateToken(jwtToken)) {
+            String userType = jwtTokenUtil.getUserTypeFromToken(jwtToken);
+
+            if ("WORKER".equals(userType)) {
+                String role = jwtTokenUtil.getRoleFromToken(jwtToken);
+                auth = new UsernamePasswordAuthenticationToken(
+                        jwtTokenUtil.getEmailFromToken(jwtToken),
                         null,
-                        userDetails.getAuthorities()
+                        Collections.singleton(new SimpleGrantedAuthority("ROLE_" + role))
                 );
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
+            } else {
+                auth = new UsernamePasswordAuthenticationToken(
+                        jwtTokenUtil.getEmailFromToken(jwtToken),
+                        null,
+                        Collections.emptyList()
                 );
-                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            filterChain.doFilter(request, response);
         }
-        filterChain.doFilter(request, response);
     }
 }

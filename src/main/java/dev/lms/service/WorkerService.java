@@ -2,6 +2,7 @@ package dev.lms.service;
 
 import dev.lms.models.Student;
 import dev.lms.models.Worker;
+import dev.lms.models.WorkerRole;
 import dev.lms.repository.WorkerRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,5 +30,17 @@ public class WorkerService {
 
     public List<Worker> getAllAdmins() {
         return workerRepository.findAllAdmins();
+    }
+
+    private Worker createWorker(String email, String password, String firstName,
+                                String lastName, WorkerRole role) {
+        Worker worker = new Worker();
+        worker.setEmail(email);
+        worker.setPassword(passwordEncoder.encode(password));
+        worker.setFirstName(firstName);
+        worker.setLastName(lastName);
+        worker.setRole(role);
+
+        return workerRepository.save(worker);
     }
 }

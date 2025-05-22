@@ -7,7 +7,7 @@ type UserData = {
     // name: string;
     email: string;
     token: string;
-    // roles?: string[];
+    userType: string;
 };
 
 type AuthContextType = {

@@ -16,24 +16,25 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Box
+    Box,
+    Tabs,
+    Tab,
+    Typography
 } from '@mui/material';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { AppProvider } from '@toolpad/core/AppProvider';
-import { AuthProvider, AuthResponse } from '@toolpad/core/SignInPage';
 import { useTheme } from '@mui/material/styles';
 import { useState } from "react";
 import axios from "axios";
-import {useAuth} from "../components/AuthContext";
+import { useAuth } from "../components/AuthContext";
 
-const providers = [{ id: 'credentials', name: 'Email and Password' }];
 interface LoginResponse {
     token: string;
     id: string;
     email: string;
     firstName: string;
+    userType: 'STUDENT' | 'TEACHER' | 'ADMIN';
 }
 
 function CustomEmailField() {
@@ -126,14 +127,119 @@ function SignUpLink() {
 
 function ForgotPasswordLink() {
     return (
-        <Link href="/" variant="body2">
+        <Link href="/forgot-password" variant="body2">
             Забыли пароль?
         </Link>
     );
 }
 
-function Title() {
-    return <h2 style={{ marginBottom: 8 }}>Войти</h2>;
+interface LoginModalProps {
+    open: boolean;
+    onClose: () => void;
+}
+
+function LoginModal({ open, onClose }: LoginModalProps) {
+    const { login } = useAuth();
+    const theme = useTheme();
+    const [error, setError] = useState('');
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<'student' | 'worker'>('student');
+
+    const handleTabChange = (event: React.SyntheticEvent, newValue: 'student' | 'worker') => {
+        setActiveTab(newValue);
+    };
+
+    const handleLogin = async (formData: FormData): Promise<void> => {
+        try {
+            const endpoint = activeTab === 'student'
+                ? 'http://localhost:8080/api/auth/login/student'
+                : 'http://localhost:8080/api/auth/login/worker';
+
+            const response = await axios.post<LoginResponse>(endpoint, {
+                email: formData.get('email'),
+                password: formData.get('password')
+            });
+
+            await login({
+                token: response.data.token,
+                id: response.data.id,
+                email: response.data.email,
+                userType: response.data.userType
+            });
+
+            onClose();
+        } catch (err) {
+            const errorMessage = axios.isAxiosError(err)
+                ? err.response?.data?.message || 'Неверный email или пароль'
+                : 'Ошибка при входе';
+            setError(errorMessage);
+            setSnackbarOpen(true);
+        }
+    };
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+            <DialogTitle>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    <Tabs
+                        value={activeTab}
+                        onChange={handleTabChange}
+                        variant="fullWidth"
+                    >
+                        <Tab
+                            label="Студент"
+                            value="student"
+                            sx={{ textTransform: 'none' }}
+                        />
+                        <Tab
+                            label="Работник"
+                            value="worker"
+                            sx={{ textTransform: 'none' }}
+                        />
+                    </Tabs>
+                </Box>
+            </DialogTitle>
+
+            <DialogContent>
+                <Box
+                    component="form"
+                    onSubmit={async (e: React.FormEvent<HTMLFormElement>) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.currentTarget);
+                        await handleLogin(formData);
+                    }}
+                    noValidate
+                >
+                    <CustomEmailField />
+                    <CustomPasswordField />
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        {activeTab === 'student' && <RememberMeCheckbox />}
+                        <ForgotPasswordLink />
+                    </Box>
+
+                    <CustomButton />
+                </Box>
+
+                {activeTab === 'student' && (
+                    <Box sx={{ textAlign: 'center', mt: 2 }}>
+                        <SignUpLink />
+                    </Box>
+                )}
+            </DialogContent>
+
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={6000}
+                onClose={() => setSnackbarOpen(false)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert severity="error" onClose={() => setSnackbarOpen(false)}>
+                    {error}
+                </Alert>
+            </Snackbar>
+        </Dialog>
+    );
 }
 
 function RememberMeCheckbox() {
@@ -156,97 +262,6 @@ function RememberMeCheckbox() {
                 },
             }}
         />
-    );
-}
-
-interface LoginModalProps {
-    open: boolean;
-    onClose: () => void;
-}
-
-function LoginModal({ open, onClose }: LoginModalProps) {
-    const { login } = useAuth(); // Добавьте эту строку
-    const theme = useTheme();
-    const [error, setError] = useState('');
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
-
-    const handleLogin = async (
-        provider: AuthProvider,
-        formData?: FormData,
-        callbackUrl?: string
-    ): Promise<{ error: any; url: any }> => {
-        try {
-            const response = await axios.post<LoginResponse>('http://localhost:8080/api/auth/login', {
-                email: formData?.get('email'),
-                password: formData?.get('password')
-            });
-
-            const userData = {
-                token: response.data.token,
-                id: response.data.id,
-                email: response.data.email
-            };
-
-            await login(userData);
-            onClose();
-
-            return {
-                error: null,
-                url: callbackUrl || '/'
-            };
-
-        } catch (err) {
-            const errorMessage = axios.isAxiosError(err)
-                ? err.response?.data?.message || 'Неверный email или пароль'
-                : 'Ошибка при входе';
-
-            setError(errorMessage);
-            setSnackbarOpen(true);
-
-            return {
-                error: errorMessage,
-                url: null
-            };
-        }
-    };
-
-    return (
-        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-            <DialogTitle>
-                <Title />
-            </DialogTitle>
-            <DialogContent>
-                <Box
-                    component="form"
-                    onSubmit={async (e: React.FormEvent<HTMLFormElement>) => {
-                        e.preventDefault();
-                        const formData = new FormData(e.currentTarget);
-                        await handleLogin(providers[0], formData);
-                    }}
-                    noValidate
-                >
-                    <CustomEmailField />
-                    <CustomPasswordField />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <RememberMeCheckbox />
-                        <ForgotPasswordLink />
-                    </Box>
-                    <CustomButton />
-                </Box>
-                <Box sx={{ textAlign: 'center', mt: 2 }}>
-                    <SignUpLink />
-                </Box>
-            </DialogContent>
-
-            <Snackbar
-                open={snackbarOpen}
-                autoHideDuration={6000}
-                onClose={() => setSnackbarOpen(false)}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            >
-                <Alert severity="error">{error}</Alert>
-            </Snackbar>
-        </Dialog>
     );
 }
 

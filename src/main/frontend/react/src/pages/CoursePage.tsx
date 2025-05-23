@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, {useState, useEffect} from 'react';
+import {useParams, Link} from 'react-router-dom';
 import axios from 'axios';
-import  AppBar  from '../components/Layout/AppBar';
+import AppBar from '../components/Layout/AppBar';
 import {
     Container,
     Typography,
@@ -12,8 +12,8 @@ import {
     Button,
     CircularProgress,
 } from '@mui/material';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import {format} from 'date-fns';
+import {ru} from 'date-fns/locale';
 import {useAuth} from "../components/AuthContext";
 
 interface Course {
@@ -30,14 +30,14 @@ interface Course {
 }
 
 export default function CoursePage() {
-    const { id } = useParams<{ id: string }>();
+    const {id} = useParams<{ id: string }>();
     const [course, setCourse] = useState<Course | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isApplying, setIsApplying] = useState(false);
     const [applyError, setApplyError] = useState('');
     const [applySuccess, setApplySuccess] = useState(false);
-    const { user } = useAuth();
+    const {user} = useAuth();
 
     useEffect(() => {
         const fetchCourse = async () => {
@@ -69,7 +69,7 @@ export default function CoursePage() {
         try {
             await axios.post(
                 'http://localhost:8080/api/requests',
-                { courseId: course?.id },
+                {courseId: course?.id},
                 {
                     headers: {
                         Authorization: `Bearer ${user.token}` // Используем токен из контекста
@@ -88,15 +88,15 @@ export default function CoursePage() {
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <CircularProgress />
+            <Box sx={{display: 'flex', justifyContent: 'center', mt: 4}}>
+                <CircularProgress/>
             </Box>
         );
     }
 
     if (error) {
         return (
-            <Container maxWidth="md" sx={{ mt: 4 }}>
+            <Container maxWidth="md" sx={{mt: 4}}>
                 <Typography color="error">{error}</Typography>
             </Container>
         );
@@ -108,27 +108,26 @@ export default function CoursePage() {
 
     //Форматирование даты
     const formatDate = (date: string) => {
-        return format(new Date(date), 'dd MMMM yyyy', { locale: ru });
+        return format(new Date(date), 'dd MMMM yyyy', {locale: ru});
     };
 
     return (
-        <>
-            <AppBar/><Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-            <Paper elevation={3} sx={{ p: 4 }}>
+        <Container maxWidth="md" sx={{mt: 4, mb: 4}}>
+            <Paper elevation={3} sx={{p: 4}}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     {course.name}
                 </Typography>
 
-                <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                    <Chip label={course.category} color="primary" />
-                    <Chip label={course.status} variant="outlined" />
+                <Box sx={{display: 'flex', gap: 2, mb: 3}}>
+                    <Chip label={course.category} color="primary"/>
+                    <Chip label={course.status} variant="outlined"/>
                 </Box>
 
                 <Typography variant="subtitle1" gutterBottom>
                     Направление: {course.studyDirection}
                 </Typography>
 
-                <Box sx={{ display: 'flex', gap: 4, mb: 3 }}>
+                <Box sx={{display: 'flex', gap: 4, mb: 3}}>
                     <Typography>
                         <strong>Начало:</strong> {formatDate(course.startDate)}
                     </Typography>
@@ -140,7 +139,7 @@ export default function CoursePage() {
                     </Typography>
                 </Box>
 
-                <Divider sx={{ my: 3 }} />
+                <Divider sx={{my: 3}}/>
 
                 <Typography variant="h6" gutterBottom>
                     Описание курса
@@ -149,19 +148,19 @@ export default function CoursePage() {
                     {course.description || 'Описание отсутствует'}
                 </Typography>
 
-                <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+                <Typography variant="h6" gutterBottom sx={{mt: 4}}>
                     Результаты обучения
                 </Typography>
                 <Typography paragraph>
                     {course.resultCompetence}
                 </Typography>
 
-                <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+                <Box sx={{mt: 4, display: 'flex', justifyContent: 'flex-end'}}>
                     <Button
                         variant="contained"
                         component={Link}
                         to="/courses"
-                        sx={{ mr: 2 }}
+                        sx={{mr: 2}}
                     >
                         Назад к списку
                     </Button>
@@ -173,7 +172,7 @@ export default function CoursePage() {
                     >
                         {isApplying ? (
                             <>
-                                <CircularProgress size={24} sx={{ mr: 1 }}/>
+                                <CircularProgress size={24} sx={{mr: 1}}/>
                                 Отправка...
                             </>
                         ) : 'Записаться на курс'}
@@ -182,18 +181,18 @@ export default function CoursePage() {
 
                 {/* Уведомления */}
                 {applyError && (
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{mt: 2}}>
                         <Typography color="error">{applyError}</Typography>
                     </Box>
                 )}
                 {applySuccess && (
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{mt: 2}}>
                         <Typography color="success.main">
                             Вы успешно записаны на курс!
                         </Typography>
                     </Box>
                 )}
             </Paper>
-        </Container></>
+        </Container>
     );
 }

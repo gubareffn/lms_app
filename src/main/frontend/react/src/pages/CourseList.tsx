@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     Grid,
     Card,
@@ -10,8 +10,8 @@ import {
     Box,
     Button
 } from '@mui/material';
-import { Link } from 'react-router-dom';
-import  AppBar  from '../components/Layout/AppBar';
+import {Link} from 'react-router-dom';
+import AppBar from '../components/Layout/AppBar';
 import axios from 'axios';
 
 interface CourseShort {
@@ -47,23 +47,22 @@ const CourseList = () => {
 
     if (loading) {
         return (
-            <Container sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <CircularProgress />
+            <Container sx={{display: 'flex', justifyContent: 'center', mt: 4}}>
+                <CircularProgress/>
             </Container>
         );
     }
 
     if (error) {
         return (
-            <Container sx={{ mt: 4, textAlign: 'center' }}>
+            <Container sx={{mt: 4, textAlign: 'center'}}>
                 <Typography color="error">{error}</Typography>
             </Container>
         );
     }
 
     return (
-        <>
-            <AppBar/><Container maxWidth="lg" sx={{py: 4}}>
+        <Container maxWidth="lg" sx={{py: 4}}>
             <Typography variant="h4" component="h1" gutterBottom sx={{mb: 4}}>
                 Доступные курсы
             </Typography>
@@ -123,7 +122,7 @@ const CourseList = () => {
                     </Grid>
                 ))}
             </Grid>
-        </Container></>
+        </Container>
     );
 };
 

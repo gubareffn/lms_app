@@ -83,18 +83,35 @@ public class AuthService {
             throw new BadCredentialsException("Invalid password");
         }
 
-        String token = jwtTokenUtil.generateToken(
-                worker.getEmail(),
-                worker.getId(),
-                "WORKER",
-                worker.getRole().getName()
-        );
-        return new AuthResponse(
-                token,
-                worker.getId(),
-                worker.getEmail(),
-                "WORKER",
-                worker.getRole().getName()
-        );
+        if (worker.getRole().getName().equals("Преподаватель")) {
+            String token = jwtTokenUtil.generateToken(
+                    worker.getEmail(),
+                    worker.getId(),
+                    "TEACHER",
+                    worker.getRole().getName()
+            );
+            return new AuthResponse(
+                    token,
+                    worker.getId(),
+                    worker.getEmail(),
+                    "TEACHER",
+                    worker.getRole().getName()
+            );
+        }
+        else {
+            String token = jwtTokenUtil.generateToken(
+                    worker.getEmail(),
+                    worker.getId(),
+                    "ADMIN",
+                    worker.getRole().getName()
+            );
+            return new AuthResponse(
+                    token,
+                    worker.getId(),
+                    worker.getEmail(),
+                    "ADMIN",
+                    worker.getRole().getName()
+            );
+        }
     }
 }

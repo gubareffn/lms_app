@@ -4,21 +4,32 @@ import {
     Box,
     Toolbar,
     Typography,
-    Button,
+    Button, MenuItem, Menu, Tooltip, Avatar, IconButton,
 
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import LoginModal from "../../pages/SignInPage";
 import {useState} from "react";
 import {useAuth} from "../AuthContext";
+import { AccountCircle } from '@mui/icons-material';
 
 export default function NavigationBar() {
     const [loginOpen, setLoginOpen] = useState(false);
     const { isAuthenticated, user, logout } = useAuth();
+    const settings = ['Профиль', 'Выход'];
+    const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
+
+    const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorElUser(event.currentTarget);
+    };
+
+    const handleCloseUserMenu = () => {
+        setAnchorElUser(null);
+    };
 
     return (
         <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
+            <AppBar position="fixed">
                 <Toolbar>
                     <Typography
                         variant="h6"
@@ -49,30 +60,66 @@ export default function NavigationBar() {
                         >
                             Каталог
                         </Button>
-                        <Button
-                            color="inherit"
-                            component={Link}
-                            to="/my-courses"
-                            sx={{ textTransform: 'none' }}
-                        >
-                            Мои курсы
-                        </Button>
+                        {localStorage.getItem("userType") === "STUDENT" && (
+                            <Button
+                                color="inherit"
+                                component={Link}
+                                to="/my-courses"
+                                sx={{textTransform: 'none'}}
+                            >
+                                Моё обучение
+                            </Button>
+                        )}
+
                     </Box>
 
                     {/* Кнопки авторизации (справа) */}
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         {isAuthenticated ? (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="body1" sx={{ color: 'inherit' }}>
-                                    {user?.email}
-                                </Typography>
-                                <Button
-                                    color="inherit"
-                                    onClick={logout}
-                                    sx={{ textTransform: 'none' }}
+                                <Tooltip title="Профиль">
+                                    <IconButton
+                                        size="large"
+                                        aria-label={user?.email}
+                                        aria-controls="menu-appbar"
+                                        aria-haspopup="true"
+                                        onClick={handleOpenUserMenu}
+                                        color="inherit"
+                                        sx={{
+                                            display: 'flex',
+                                            flexDirection: 'row-reverse', // или просто поменять местами элементы
+                                            gap: 1,
+                                            p: 0,
+                                            "&:hover": {
+                                                backgroundColor: 'transparent' // убрать фон при наведении, если нужно
+                                            }
+                                        }}
+                                    >
+                                        <AccountCircle />
+                                        <Typography variant="body1" sx={{ color: 'inherit' }}>
+                                            {user?.email}
+                                        </Typography>
+                                    </IconButton>
+                                </Tooltip>
+
+                                <Menu
+                                    id="menu-appbar"
+                                    anchorEl={anchorElUser}
+                                    anchorOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                    }}
+                                    keepMounted
+                                    transformOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                    }}
+                                    open={Boolean(anchorElUser)}
+                                    onClose={handleCloseUserMenu}
                                 >
-                                    Выйти
-                                </Button>
+                                    <MenuItem component={Link} to="/profile">Профиль</MenuItem>
+                                    <MenuItem onClick={logout}>Выйти</MenuItem>
+                                </Menu>
                             </Box>
                         ) : (
                             <>

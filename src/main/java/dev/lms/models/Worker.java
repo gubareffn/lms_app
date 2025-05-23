@@ -35,8 +35,8 @@ public class Worker {
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email;
 
-    @OneToMany(mappedBy = "worker")
-    private Set<Request> requests = new HashSet<>();
+//    @OneToMany(mappedBy = "worker")
+//    private Set<Request> requests = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)

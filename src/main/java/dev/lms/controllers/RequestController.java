@@ -88,7 +88,7 @@ public class RequestController {
             }
 
             // Получаем заявки студента
-            List<RequestDTO> requests = requestService.getRequestsByStudent(studentId.longValue());
+            List<RequestDTO> requests = requestService.getRequestsByStudent(studentId);
             return ResponseEntity.ok(requests);
 
         } catch (Exception e) {

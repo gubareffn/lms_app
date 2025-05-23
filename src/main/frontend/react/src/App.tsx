@@ -13,6 +13,7 @@ import CoursePage from "./pages/CoursePage";
 import {useAuth} from './components/AuthContext';
 import ProfilePage from "./pages/ProfilePage";
 import NavigationBar from "./components/Layout/AppBar";
+import MyEducationPage from "./pages/MyEducationPage";
 
 // import StudentProfile from "./pages/StudentProfile";
 
@@ -32,6 +33,8 @@ function App() {
                         <Route path="/courses" element={<CourseList />} />
                         <Route path="/courses/:id" element={<CoursePage />} />
                         <Route path="/sign-up" element={<SignUpPage />} />
+                        <Route path="//my-education" element={<MyEducationPage />} />
+
                     </Routes>
                 </main>
             </BrowserRouter>

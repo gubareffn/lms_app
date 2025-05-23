@@ -64,7 +64,7 @@ export default function NavigationBar() {
                             <Button
                                 color="inherit"
                                 component={Link}
-                                to="/my-courses"
+                                to="/my-education"
                                 sx={{textTransform: 'none'}}
                             >
                                 Моё обучение

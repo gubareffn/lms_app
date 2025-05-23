@@ -24,6 +24,7 @@ public class StudentController {
     @GetMapping("/profile")
     public ResponseEntity<StudentProfileDto> getProfile(Authentication authentication) {
         String email = authentication.getName();
+
         Student student = studentRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Student not found"));
 

@@ -69,11 +69,12 @@ public class RequestService {
                 .createTime(request.getCreateTime())
                 .processingTime(request.getProcessingTime())
                 .requestText(request.getRequestText())
+                .courseName(request.getCourse().getName())
                 .build();
     }
 
-    public List<RequestDTO> getRequestsByStudent(Long studentId) {
-        return requestRepository.findByStudentId(Math.toIntExact(studentId)).stream()
+    public List<RequestDTO> getRequestsByStudent(Integer studentId) {
+        return requestRepository.findAllRequestsByStudentId(studentId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

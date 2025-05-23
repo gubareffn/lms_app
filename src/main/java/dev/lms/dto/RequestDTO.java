@@ -24,7 +24,7 @@ public class RequestDTO {
     private LocalDateTime createTime;
     private LocalDateTime processingTime;
     private String requestText;
-
+    private String courseName;       // Добавлено
 
 }
 

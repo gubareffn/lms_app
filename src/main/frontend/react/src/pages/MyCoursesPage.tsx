@@ -116,10 +116,10 @@ const ActiveCourses = () => {
                         <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
                             <Button
                                 component={Link}
-                                to={`/courses/${course.id}`}
+                                to={`/courses/materials/${course.id}`}
                                 variant="contained"
                                 size="small"
-                                disabled={course.status !== 'ACTIVE'}
+                                // disabled={course.status !== 'ACTIVE'}
                             >
                                 Продолжить
                                 {/*{course.progress > 0 ? 'Продолжить' : 'Начать'}*/}

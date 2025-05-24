@@ -20,7 +20,7 @@ public class EducationMaterial {
     private String name;
 
     @Column(name = "added_date", nullable = false)
-    private LocalDateTime adding_date;
+    private LocalDateTime addingDate;
 
     @Column(name = "material_text")
     private String text;

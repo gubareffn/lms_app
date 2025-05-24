@@ -10,6 +10,7 @@ import {
     Paper
 } from '@mui/material';
 import Applications from './MyRequestsList';
+import ActiveCourses from './MyCoursesPage';
 // import ActiveCourses from './ActiveCourses';
 
 const MyEducationPage = () => {
@@ -30,16 +31,6 @@ const MyEducationPage = () => {
                     borderRadius: 0
                 }}
             >
-                <Typography
-                    variant="h6"
-                    sx={{
-                        p: 2,
-                        fontWeight: 'bold',
-                        borderBottom: '1px solid rgba(0, 0, 0, 0.12)'
-                    }}
-                >
-                    Меню
-                </Typography>
 
                 <List>
                     <ListItem disablePadding>
@@ -66,7 +57,7 @@ const MyEducationPage = () => {
             <Box sx={{
                 flexGrow: 1,
                 p: 3,
-                marginLeft: '16px' // Отступ от меню
+                marginLeft: '16px'
             }}>
                 <Typography variant="h4" gutterBottom>
                     {activeTab === 'applications' ? 'Мои заявки' : 'Активные курсы'}
@@ -74,8 +65,7 @@ const MyEducationPage = () => {
 
                 <Divider sx={{ mb: 3 }} />
 
-                {activeTab === 'applications'  && <Applications />}
-                {/*{activeTab === 'applications' ? <Applications /> : <ActiveCourses />}*/}
+                {activeTab === 'applications' ? <Applications /> : <ActiveCourses />}
             </Box>
         </Box>
     );

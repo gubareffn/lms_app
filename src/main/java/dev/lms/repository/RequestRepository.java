@@ -20,6 +20,10 @@ public interface RequestRepository extends JpaRepository<Request, Integer> {
             "WHERE r.student.id = :studentId")
     List<Request> findAllRequestsByStudentId(@Param("studentId") Integer id);
 
+    //Получение списка курсов авторизованного студента
+    @Query("SELECT r.course FROM Request r WHERE r.status.name like 'Принята' AND r.student.id = :id")
+    List <Course> findAllCoursesByStudentId(@Param("id") Integer id);
+
     List<Request> findAllByStudentId(Integer studentId);
 
     boolean existsByStudentIdAndCourseId(Long studentId, Integer courseId);

@@ -1,6 +1,7 @@
 package dev.lms.service;
 
 
+import dev.lms.dto.CourseShortDto;
 import dev.lms.dto.CreateRequestDTO;
 import dev.lms.dto.RequestDTO;
 import dev.lms.models.Course;
@@ -76,6 +77,12 @@ public class RequestService {
     public List<RequestDTO> getRequestsByStudent(Integer studentId) {
         return requestRepository.findAllRequestsByStudentId(studentId).stream()
                 .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<CourseShortDto> getCoursesByStudent(Integer studentId) {
+        return requestRepository.findAllCoursesByStudentId(studentId).stream()
+                .map(CourseShortDto::new)
                 .collect(Collectors.toList());
     }
 }

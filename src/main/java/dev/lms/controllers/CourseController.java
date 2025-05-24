@@ -2,7 +2,6 @@ package dev.lms.controllers;
 
 import dev.lms.dto.CourseDetailsDto;
 import dev.lms.dto.CourseShortDto;
-import dev.lms.models.Course;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

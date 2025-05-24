@@ -1,5 +1,6 @@
 package dev.lms.controllers;
 
+import dev.lms.dto.CourseShortDto;
 import dev.lms.dto.CreateRequestDTO;
 import dev.lms.dto.RequestDTO;
 import dev.lms.jwt.JwtCore;
@@ -90,6 +91,43 @@ public class RequestController {
             // Получаем заявки студента
             List<RequestDTO> requests = requestService.getRequestsByStudent(studentId);
             return ResponseEntity.ok(requests);
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error fetching requests: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/my-courses")
+    public ResponseEntity<?> getMyCourses(HttpServletRequest request) {
+        try {
+            // Получаем токен из заголовка Authorization
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(401).body("Missing or invalid Authorization header");
+            }
+
+            String token = authHeader.substring(7);
+
+            // Проверяем валидность токена
+            if (!jwtCore.validateToken(token)) {
+                return  ResponseEntity.status(401).body("Invalid token");
+            }
+
+            // Извлекаем ID студента из токена
+            Integer studentId = (Integer) Jwts.parser()
+                    .setSigningKey(jwtCore.getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .get("id");
+
+            if (studentId == null) {
+                return ResponseEntity.status(403).body("Student ID not found in token");
+            }
+
+            // Получаем заявки студента
+            List<CourseShortDto> courses = requestService.getCoursesByStudent(studentId);
+            return ResponseEntity.ok(courses);
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error fetching requests: " + e.getMessage());

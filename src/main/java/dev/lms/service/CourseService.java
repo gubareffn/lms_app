@@ -2,6 +2,7 @@ package dev.lms.service;
 
 import dev.lms.dto.CourseDetailsDto;
 import dev.lms.dto.CourseShortDto;
+import dev.lms.dto.RequestDTO;
 import dev.lms.models.Course;
 import dev.lms.repository.CourseRepository;
 import org.springframework.stereotype.Service;

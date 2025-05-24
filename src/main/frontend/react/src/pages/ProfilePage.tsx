@@ -59,7 +59,6 @@ const ProfilePage = () => {
             }
         };
 
-
         if (user) {
             fetchProfile();
         }

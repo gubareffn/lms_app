@@ -21,7 +21,7 @@ public class EducationMaterialDto {
     public EducationMaterialDto(EducationMaterial material) {
         this.id = material.getId();
         this.name = material.getName();
-        this.addingDate = material.getAdding_date();
+        this.addingDate = material.getAddingDate();
         this.text = material.getText();
         this.courseId = material.getCourse() != null ? material.getCourse().getId() : null;
     }

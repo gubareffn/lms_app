@@ -25,6 +25,9 @@ public class StudyingProgress {
     @Column(name = "final_grade")
     private Integer finalGrade;
 
+    @Column(name = "completion_percentage")
+    private Integer percent;
+
     @Column(name = "final_exam_result")
     private Integer finaExamResult;
 

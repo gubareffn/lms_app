@@ -23,12 +23,6 @@ public class StudyingProgressService {
     private final RequestRepository requestRepository;
     private final StudyingStatusRepository studyingStatusRepository;
 
-//    public StudyingProgressService(StudyingProgressRepository progressRepository, RequestRepository requestRepository, StudyingStatusRepository studyingStatusRepository) {
-//        this.progressRepository = progressRepository;
-//        this.requestRepository = requestRepository;
-//        this.studyingStatusRepository = studyingStatusRepository;
-//    }
-
     public StudyingProgressDto getProgress(Integer studentId, Integer courseId) {
         Request request = requestRepository.findByStudentIdAndCourseId(studentId, courseId)
                 .orElseThrow(() -> new EntityNotFoundException("Request not found"));

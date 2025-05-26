@@ -133,23 +133,7 @@ const ProfilePage = () => {
 
                 {userRole === 'STUDENT' && (
                     <Box mb={4}>
-                        <Typography variant="h6" gutterBottom>
-                            Мои курсы
-                        </Typography>
-                        {profile.courses?.length ? (
-                            <List>
-                                {profile.courses.map(course => (
-                                    <ListItem key={course.id}>
-                                        <ListItemText
-                                            primary={course.title}
-                                            secondary={`Статус: ${course.status}`}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        ) : (
-                            <Typography color="text.secondary">Нет активных курсов</Typography>
-                        )}
+
                     </Box>
                 )}
 

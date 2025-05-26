@@ -79,6 +79,7 @@ public class StudyingProgressController {
             return ResponseEntity.status(403).body("Student ID not found in token");
         }
 
+
         progressService.updateProgress(studentId, progressDto);
         return ResponseEntity.ok().build();
     }

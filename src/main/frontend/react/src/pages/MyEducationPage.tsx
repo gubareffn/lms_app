@@ -14,7 +14,7 @@ import ActiveCourses from './MyCoursesPage';
 // import ActiveCourses from './ActiveCourses';
 
 const MyEducationPage = () => {
-    const [activeTab, setActiveTab] = useState<'applications' | 'courses'>('applications');
+    const [activeTab, setActiveTab] = useState<'courses' | 'applications'>('courses');
 
     return (
         <Box sx={{
@@ -35,19 +35,19 @@ const MyEducationPage = () => {
                 <List>
                     <ListItem disablePadding>
                         <ListItemButton
-                            selected={activeTab === 'applications'}
-                            onClick={() => setActiveTab('applications')}
+                            selected={activeTab === 'courses'}
+                            onClick={() => setActiveTab('courses')}
                         >
-                            <ListItemText primary="Мои заявки" />
+                            <ListItemText primary="Активные курсы" />
                         </ListItemButton>
                     </ListItem>
 
                     <ListItem disablePadding>
                         <ListItemButton
-                            selected={activeTab === 'courses'}
-                            onClick={() => setActiveTab('courses')}
+                            selected={activeTab === 'applications'}
+                            onClick={() => setActiveTab('applications')}
                         >
-                            <ListItemText primary="Активные курсы" />
+                            <ListItemText primary="Мои заявки" />
                         </ListItemButton>
                     </ListItem>
                 </List>

@@ -27,13 +27,6 @@ interface Course {
 
 }
 
-// id: number;
-// name: string;
-// description: string;
-// progress: number;
-// startDate: string;
-// endDate: string;
-// status: 'ACTIVE' | 'COMPLETED';
 
 const ActiveCourses = () => {
     const [courses, setCourses] = useState<Course[]>([]);
@@ -95,22 +88,6 @@ const ActiveCourses = () => {
                                 {course.description}
                             </Typography>
 
-                            <Box sx={{ mt: 2 }}>
-                                {/*<Typography display="inline">Прогресс: </Typography>*/}
-                                {/*<Typography display="inline" fontWeight="bold">*/}
-                                {/*    {course.progress}%*/}
-                                {/*</Typography>*/}
-                                {/*<Box sx={{ width: '100%', height: 8, bgcolor: '#e0e0e0', mt: 1, borderRadius: 4 }}>*/}
-                                {/*    <Box*/}
-                                {/*        sx={{*/}
-                                {/*            width: `${course.progress}%`,*/}
-                                {/*            height: '100%',*/}
-                                {/*            bgcolor: course.progress === 100 ? 'success.main' : 'primary.main',*/}
-                                {/*            borderRadius: 4*/}
-                                {/*        }}*/}
-                                {/*    />*/}
-                                {/*</Box>*/}
-                            </Box>
                         </CardContent>
 
                         <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>

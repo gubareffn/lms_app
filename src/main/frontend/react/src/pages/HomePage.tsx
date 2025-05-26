@@ -18,14 +18,6 @@ export const HomePage = () => {
                         variant="contained"
                         size="large"
                         component={Link}
-                        to="/profile"
-                    >
-                        Мой профиль
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        size="large"
-                        component={Link}
                         to="/courses"
                     >
                         Все курсы

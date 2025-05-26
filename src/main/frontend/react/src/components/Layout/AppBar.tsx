@@ -60,16 +60,19 @@ export default function NavigationBar() {
                         >
                             Каталог
                         </Button>
-                        {localStorage.getItem("userType") === "STUDENT" && (
-                            <Button
-                                color="inherit"
-                                component={Link}
-                                to="/my-education"
-                                sx={{textTransform: 'none'}}
-                            >
-                                Моё обучение
-                            </Button>
-                        )}
+                        {isAuthenticated && (
+                                localStorage.getItem("userType") === "STUDENT" && (
+                                    <Button
+                                        color="inherit"
+                                        component={Link}
+                                        to="/my-education"
+                                        sx={{textTransform: 'none'}}
+                                    >
+                                        Моё обучение
+                                    </Button>
+                                )
+                            )
+                        }
 
                     </Box>
 

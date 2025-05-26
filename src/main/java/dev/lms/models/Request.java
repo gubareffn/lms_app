@@ -33,7 +33,7 @@ public class Request {
     private Student student;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "worker_id", nullable = false)
+    @JoinColumn(name = "worker_id")
     private Worker worker;
 
     @ManyToOne(fetch = FetchType.LAZY)

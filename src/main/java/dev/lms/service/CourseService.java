@@ -54,7 +54,7 @@ public class CourseService {
         course.setStatus(courseStatusRepository.findById(courseDto.getStatusId())
                 .orElseThrow(() -> new RuntimeException("Статус не найден с id:")));
 
-        Worker worker = workerRepository.findById(workerId)
+        Worker worker = workerRepository.findByIdWithRelations(workerId)
                 .orElseThrow(() -> new RuntimeException("Работник не найден"));
 
         course.setName(courseDto.getName());

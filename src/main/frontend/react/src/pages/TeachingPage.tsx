@@ -76,7 +76,7 @@ const TeachingPage = () => {
         <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
             {/* Боковое меню */}
             <Paper elevation={3} sx={{
-                width: 250,
+                width: 300,
                 p: 2,
                 borderRadius: 0,
                 display: 'flex',

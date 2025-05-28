@@ -17,6 +17,8 @@ import MyEducationPage from "./pages/MyEducationPage";
 import CourseStepper from "./pages/CourseStepper";
 import TeachingPage from "./pages/TeachingPage";
 import CourseCreatePage from "./pages/CourseCreatePage";
+import AdminPage from "./pages/AdminPage";
+
 
 // import StudentProfile from "./pages/StudentProfile";
 
@@ -40,6 +42,7 @@ function App() {
                         <Route path="/courses/materials/:courseId" element={<CourseStepper />} />
                         <Route path="/teaching" element={<TeachingPage />} />
                         <Route path="/teaching/create-course" element={<CourseCreatePage/>} />
+                        <Route path="/admin" element={<AdminPage/>} />
                     </Routes>
                 </main>
             </BrowserRouter>

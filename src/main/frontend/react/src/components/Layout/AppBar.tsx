@@ -88,6 +88,20 @@ export default function NavigationBar() {
                                 )
                             )
                         }
+
+                        {isAuthenticated && (
+                            localStorage.getItem("userType") === "ADMIN" && (
+                                <Button
+                                    color="inherit"
+                                    component={Link}
+                                    to="/admin"
+                                    sx={{textTransform: 'none'}}
+                                >
+                                    Администрирование
+                                </Button>
+                            )
+                        )
+                        }
                     </Box>
 
                     {/* Кнопки авторизации (справа) */}

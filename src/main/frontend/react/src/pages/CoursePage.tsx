@@ -43,7 +43,6 @@ export default function CoursePage() {
         const fetchCourse = async () => {
             try {
                 const response = await axios.get<Course>(`http://localhost:8080/api/courses/${id}`);
-                console.log(response);
                 setCourse(response.data);
             } catch (err) {
                 setError('Не удалось загрузить данные курса');

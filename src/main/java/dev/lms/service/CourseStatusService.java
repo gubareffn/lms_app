@@ -18,6 +18,4 @@ public class CourseStatusService {
     public List<CourseStatus> getAll() {
         return courseStatusRepository.findAll();
     }
-
-
 }

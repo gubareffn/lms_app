@@ -74,6 +74,12 @@ public class RequestService {
                 .build();
     }
 
+    public List<RequestDTO> getAllRequests() {
+        return requestRepository.findAllWithRelations().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public List<RequestDTO> getRequestsByStudent(Integer studentId) {
         return requestRepository.findAllRequestsByStudentId(studentId).stream()
                 .map(this::convertToDTO)

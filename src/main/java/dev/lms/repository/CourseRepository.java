@@ -19,4 +19,5 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     @Query("SELECT c FROM Course c WHERE c.id = :id")
     Optional<Course> findByIdWithDetails(@Param("id") Integer id);
 
+    List<Course> findAllByWorkerId(Integer id);
 }

@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Getter
@@ -46,6 +48,14 @@ public class Course {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_status_id", nullable = false)
     private CourseStatus status;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "course_worker",
+            joinColumns = @JoinColumn(name = "course_id"),
+            inverseJoinColumns = @JoinColumn(name = "worker_id")
+    )
+    private Set<Worker> worker = new HashSet<Worker>();
 
     //    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
 //    private List<Assignment> assignments = new ArrayList<>();

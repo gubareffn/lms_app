@@ -39,13 +39,7 @@ public class RequestController {
                 return ResponseEntity.status(401).body("Invalid token");
             }
 
-            // Извлекаем ID студента из токена
-            Integer studentId = (Integer) Jwts.parser()
-                    .setSigningKey(jwtCore.getSigningKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody()
-                    .get("id");
+            Integer studentId = jwtCore.getUserIdFromToken(token);
 
             if (studentId == null) {
                 return ResponseEntity.status(403).body("Student ID not found in token");
@@ -60,6 +54,7 @@ public class RequestController {
         }
     }
 
+    // Получение списка заявок авторизованного пользователя
     @GetMapping("/my")
     public ResponseEntity<?> getMyRequests(HttpServletRequest request) {
         try {
@@ -97,6 +92,7 @@ public class RequestController {
         }
     }
 
+    // Получение списка курсов авторизованного пользователя
     @GetMapping("/my-courses")
     public ResponseEntity<?> getMyCourses(HttpServletRequest request) {
         try {

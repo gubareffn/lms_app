@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -41,12 +42,13 @@ public class Worker {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
     private WorkerRole role;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "course_worker",
+            joinColumns = @JoinColumn(name = "worker_id"),
+            inverseJoinColumns = @JoinColumn(name = "course_id")
+    )
+    private List<Course> course;
 }
 
-//    public UserDetails toUserDetails() {
-//        return new org.springframework.security.core.userdetails.User(
-//                this.email,
-//                this.password,
-//                Collections.singletonList(new SimpleGrantedAuthority("ROLE_STUDENT"))
-//        );
-//    }

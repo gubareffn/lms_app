@@ -1,6 +1,7 @@
 package dev.lms.repository;
 
 
+import dev.lms.models.Request;
 import dev.lms.models.Student;
 import dev.lms.models.Worker;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,6 +25,11 @@ public interface WorkerRepository extends JpaRepository<Worker, Long> {
     Optional<Worker> findByEmail(@Param(value = "email") String email);
 
 //    Optional<Worker> findByEmail(String email);
+
+
+    @Query("SELECT w FROM Worker w JOIN FETCH w.role WHERE w.id = :workerId")
+    Optional<Worker> findById(@Param("workerId") Integer workerId);
+
 
     boolean existsByEmail(String email);
 }

@@ -72,8 +72,22 @@ export default function NavigationBar() {
                                     </Button>
                                 )
                             )
+
                         }
 
+                        {isAuthenticated && (
+                                localStorage.getItem("userType") === "TEACHER" && (
+                                    <Button
+                                        color="inherit"
+                                        component={Link}
+                                        to="/teaching"
+                                        sx={{textTransform: 'none'}}
+                                    >
+                                        Преподавание
+                                    </Button>
+                                )
+                            )
+                        }
                     </Box>
 
                     {/* Кнопки авторизации (справа) */}

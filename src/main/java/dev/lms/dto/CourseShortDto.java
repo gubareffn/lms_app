@@ -6,7 +6,6 @@ import dev.lms.models.Course;
 
 import java.time.LocalDateTime;
 
-// CourseShortDto.java
 @Getter
 @Setter
 public class CourseShortDto {

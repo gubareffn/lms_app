@@ -15,6 +15,8 @@ import ProfilePage from "./pages/ProfilePage";
 import NavigationBar from "./components/Layout/AppBar";
 import MyEducationPage from "./pages/MyEducationPage";
 import CourseStepper from "./pages/CourseStepper";
+import TeachingPage from "./pages/TeachingPage";
+import CourseCreatePage from "./pages/CourseCreatePage";
 
 // import StudentProfile from "./pages/StudentProfile";
 
@@ -36,7 +38,8 @@ function App() {
                         <Route path="/sign-up" element={<SignUpPage />} />
                         <Route path="/my-education" element={<MyEducationPage />} />
                         <Route path="/courses/materials/:courseId" element={<CourseStepper />} />
-                        {/*<Route path="//my-education" element={<MyEducationPage />} />*/}
+                        <Route path="/teaching" element={<TeachingPage />} />
+                        <Route path="/teaching/create-course" element={<CourseCreatePage/>} />
                     </Routes>
                 </main>
             </BrowserRouter>

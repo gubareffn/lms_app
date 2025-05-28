@@ -1,6 +1,7 @@
 package dev.lms.dto;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import dev.lms.models.Course;
 
@@ -10,6 +11,7 @@ import java.util.Optional;
 // CourseDetailsDto.java
 @Getter
 @Setter
+@NoArgsConstructor
 public class CourseDetailsDto {
     private Integer id;
     private String name;
@@ -21,6 +23,8 @@ public class CourseDetailsDto {
     private String resultCompetence;
     private String category;
     private String status;
+    private Integer categoryId;
+    private Integer statusId;
 
 
     public CourseDetailsDto(Course course) {
@@ -34,6 +38,9 @@ public class CourseDetailsDto {
         this.resultCompetence = course.getResultCompetence();
         this.category = course.getCategory().getName();
         this.status = course.getStatus().getName();
+        this.categoryId = course.getCategory().getId();
+        this.statusId = course.getStatus().getId();
+
 //        this.assignments = course.getAssignments().stream()
 //                .map(AssignmentDto::new)
 //                .collect(Collectors.toList());

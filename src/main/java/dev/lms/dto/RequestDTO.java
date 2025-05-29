@@ -16,8 +16,9 @@ public class RequestDTO {
     private Integer studentId;
     private Integer courseId;
     private Integer statusId;
-//    private Integer groupId;
+    private Integer groupId;
     private String status;
+    private String groupName;
     private LocalDateTime createTime;
     private LocalDateTime processingTime;
     private String requestText;

@@ -50,14 +50,14 @@ public class StudentController {
     }
 
     // Добавление студента
-    @PostMapping
-    public Student addStudent(@RequestBody Student student) {
-        return studentService.createStudent(student);
-    }
-
-    // Заглушка для обновления студента
-    @PutMapping
-    public Student updateStudent(@RequestBody Student student) {
-        return null;
-    }
+//    @PostMapping
+//    public Student addStudent(@RequestBody Student student) {
+//        return studentService.createStudent(student);
+//    }
+//
+//    // Заглушка для обновления студента
+//    @PutMapping
+//    public Student updateStudent(@RequestBody Student student) {
+//        return null;
+//    }
 }

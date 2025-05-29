@@ -11,23 +11,13 @@ import java.util.List;
 @Service
 public class StudentService {
     private final StudentRepository studentRepository;
-    private final PasswordEncoder passwordEncoder;
 
     public StudentService(StudentRepository studentRepository) {
         this.studentRepository = studentRepository;
-        this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
-    }
-
-    public Student createStudent(Student student) {
-        if (studentRepository.findByEmail(student.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email already exists");
-        }
-        student.setPassword(passwordEncoder.encode(student.getPassword()));
-        return studentRepository.save(student);
     }
 
 

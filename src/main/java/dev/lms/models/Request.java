@@ -40,9 +40,9 @@ public class Request {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
-//    @ManyToOne
-//    @JoinColumn(name = "group_id")
-//    private Group group;
+    @ManyToOne
+    @JoinColumn(name = "group_id")
+    private Group group;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_status_id", nullable = false)

@@ -4,13 +4,11 @@ import dev.lms.dto.CourseShortDto;
 import dev.lms.dto.CreateRequestDTO;
 import dev.lms.dto.RequestDTO;
 import dev.lms.jwt.JwtCore;
+import dev.lms.models.Group;
 import dev.lms.models.Request;
 import dev.lms.models.RequestStatus;
 import dev.lms.models.Worker;
-import dev.lms.repository.CourseRepository;
-import dev.lms.repository.RequestRepository;
-import dev.lms.repository.RequestStatusRepository;
-import dev.lms.repository.WorkerRepository;
+import dev.lms.repository.*;
 import dev.lms.service.RequestService;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +29,7 @@ public class RequestController {
     private final RequestRepository requestRepository;
     private final RequestStatusRepository requestStatusRepository;
     private final WorkerRepository workerRepository;
+    private final GroupRepository groupRepository;
 
     // Получение списка всех заявок
     @GetMapping
@@ -108,7 +107,14 @@ public class RequestController {
             return ResponseEntity.status(404).body("Status not found");
         }
 
+        Integer groupId = requestBody.get("groupId");
+        Group group = groupRepository.findById(groupId).orElse(null);
+        if (updateStatus == null) {
+            return ResponseEntity.status(404).body("Group not found");
+        }
+
         updateRequest.setWorker(worker);
+        updateRequest.setGroup(group);
         updateRequest.setStatus(updateStatus);
 
         requestRepository.save(updateRequest);
@@ -134,11 +140,12 @@ public class RequestController {
     }
 
 
-    // Удаление заявки
-//    @DeleteMapping
-//    public ResponseEntity<?> deleteRequest(){
-//
-//    }
+//     Удаление заявки
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity<?> deleteRequest(@PathVariable Integer id){
+        requestService.deleteRequest(id);
+        return  ResponseEntity.ok("Request deleted");
+    }
 
     // Получение списка заявок авторизованного пользователя
     @GetMapping("/my")

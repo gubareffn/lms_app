@@ -91,4 +91,11 @@ public class RequestService {
                 .map(CourseShortDto::new)
                 .collect(Collectors.toList());
     }
+
+    public void deleteRequest(Integer requestId) {
+        Request request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Request not found with id: " + requestId));
+
+        requestRepository.deleteById(requestId);
+    }
 }

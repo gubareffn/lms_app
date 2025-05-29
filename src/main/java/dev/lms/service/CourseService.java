@@ -4,6 +4,7 @@ import dev.lms.dto.CourseDetailsDto;
 import dev.lms.dto.CourseShortDto;
 import dev.lms.dto.RequestDTO;
 import dev.lms.models.Course;
+import dev.lms.models.EducationMaterial;
 import dev.lms.models.Worker;
 import dev.lms.repository.CourseCategoryRepository;
 import dev.lms.repository.CourseRepository;

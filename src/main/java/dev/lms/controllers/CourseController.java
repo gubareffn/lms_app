@@ -4,7 +4,12 @@ import dev.lms.dto.CourseDetailsDto;
 import dev.lms.dto.CourseShortDto;
 import dev.lms.dto.RequestDTO;
 import dev.lms.jwt.JwtCore;
-import dev.lms.models.Course;
+import dev.lms.models.*;
+import dev.lms.repository.CourseCategoryRepository;
+import dev.lms.repository.CourseRepository;
+import dev.lms.repository.CourseStatusRepository;
+import dev.lms.service.CourseCategoryService;
+import dev.lms.service.EducationMaterialService;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import dev.lms.service.CourseService;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -20,6 +28,9 @@ import java.util.List;
 public class CourseController {
     private final CourseService courseService;
     private final JwtCore jwtCore;
+    private final CourseRepository courseRepository;
+    private final CourseCategoryRepository courseCategoryRepository;
+    private final CourseStatusRepository courseStatusRepository;
 
     @GetMapping
     public ResponseEntity<List<CourseShortDto>> getAllCourses() {
@@ -94,10 +105,34 @@ public class CourseController {
         if (workerId == null) {
             return ResponseEntity.status(403).body("Worker ID not found in token");
         }
-
         Course course = courseService.createCourse(courseDto, workerId);
         return ResponseEntity.ok(course);
     }
 
 
+    @PutMapping("/{id}/update")
+    public ResponseEntity<?> updateCourse(@PathVariable Integer id,
+                                           @RequestBody Map<String, String> requestBody) {
+
+        Course updateCourse = courseRepository.findById(Long.valueOf(id)).orElse(null);
+        if (updateCourse == null) {
+            return ResponseEntity.status(404).body("Course not found");
+        }
+
+        Category category = courseCategoryRepository.findByName(requestBody.get("category"));
+        CourseStatus status = courseStatusRepository.findByName(requestBody.get("status"));
+
+        updateCourse.setName(requestBody.get("name"));
+        updateCourse.setDescription(requestBody.get("description"));
+        updateCourse.setStudyDirection(requestBody.get("studyDirection"));
+        updateCourse.setStartDate(LocalDateTime.parse(requestBody.get("startDate")));
+        updateCourse.setEndDate(LocalDateTime.parse(requestBody.get("endDate")));
+        updateCourse.setResultCompetence(requestBody.get("resultCompetence"));
+        updateCourse.setHoursCount(Integer.valueOf(requestBody.get("hoursCount")));
+        updateCourse.setCategory(category);
+        updateCourse.setStatus(status);
+
+        courseRepository.save(updateCourse);
+        return ResponseEntity.ok(new CourseDetailsDto(updateCourse));
+    }
 }

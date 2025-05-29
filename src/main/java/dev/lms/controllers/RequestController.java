@@ -14,6 +14,7 @@ import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -122,6 +123,7 @@ public class RequestController {
     }
 
     // Обновление статуса заявки при смене статуса
+    @Transactional
     @PutMapping("/{id}/comment")
     public ResponseEntity<?> updateRequest(@PathVariable Integer id,
                                            @RequestBody Map<String, String> requestBody) {

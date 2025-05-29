@@ -25,5 +25,5 @@ public class Group {
 
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
-    private Category course;
+    private Course course;
 }

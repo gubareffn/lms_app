@@ -10,8 +10,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface GroupRepository extends JpaRepository<Group, Integer> {
-    @Query("SELECT g FROM Group g WHERE g.course.id = : id")
-    List<Group> findAllWithRelations(@Param("id") Integer id);
+    @Query("SELECT g FROM Group g WHERE g.course.id = :id")
+    List<Group> findAllByCourseId(@Param("id") Integer id);
 
-    List<Group> findAllByCourseId(Integer courseId);
+//    List<Group> findAllByCourseId(Integer courseId);
 }

@@ -3,9 +3,9 @@ import {
     Box, Typography, Divider, Paper, TextField, Button,
     Stack, IconButton, CircularProgress, Alert, List, ListItem,
     Tabs, Tab, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Chip, Select, MenuItem
+    TableHead, TableRow, Chip, Select, MenuItem, LinearProgress
 } from '@mui/material';
-import { Add, Delete, Edit, Save, Cancel, People, Book, Group } from '@mui/icons-material';
+import {Add, Delete, Edit, Save, Cancel, People, Book, Group, Check, Close} from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../components/AuthContext';
@@ -40,8 +40,16 @@ interface Group {
 interface Student {
     id: number;
     name: string;
+    secondName: string
+    surname: string
     email: string;
     status: string;
+}
+
+interface StudentProgress {
+    studentId: number;
+    progress: number;
+    learningStatus: string;
 }
 
 const CourseManagePage = () => {
@@ -70,10 +78,15 @@ const CourseManagePage = () => {
     const [activeTab, setActiveTab] = useState('info');
     const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
 
+    const [studentsProgress, setStudentsProgress] = useState<Record<number, StudentProgress>>({});
+    const [editingStatus, setEditingStatus] = useState<{studentId: number | null, tempStatus: string}>({
+        studentId: null,
+        tempStatus: 'В процессе'
+    });
+
     // Проверка роли пользователя
     const isAdmin = localStorage.getItem("role") === 'ADMIN';
 
-    // Загрузка данных курса
     useEffect(() => {
         const fetchCourseData = async () => {
             try {
@@ -116,18 +129,71 @@ const CourseManagePage = () => {
     // Загрузка студентов при выборе группы
     useEffect(() => {
         if (selectedGroup) {
-            const fetchStudents = async () => {
+            const fetchStudentsWithProgress = async () => {
                 try {
-                    const response = await axios.get(`http://localhost:8080/api/groups/${selectedGroup}/students`);
-                    setStudents(response.data);
+                    // progressResponse
+                    const [studentsResponse] = await Promise.all([
+                        axios.get(`http://localhost:8080/api/requests/groups/${selectedGroup}/students`),
+                        // axios.get(`http://localhost:8080/api/studying-progress/group/${selectedGroup}/course/${id}`)
+                    ]);
+
+                    setStudents(studentsResponse.data);
+
+                    // Преобразуем массив прогресса в объект для быстрого доступа по studentId
+                    // const progressMap = progressResponse.data.reduce((acc: Record<number, StudentProgress>, curr: StudentProgress) => {
+                    //     acc[curr.studentId] = curr;
+                    //     return acc;
+                    // }, {});
+                    // setStudentsProgress(progressMap);
                 } catch (err) {
                     setError('Не удалось загрузить список студентов');
                     console.error(err);
                 }
             };
-            fetchStudents();
+            fetchStudentsWithProgress();
         }
-    }, [selectedGroup]);
+    }, [selectedGroup, id]);
+
+    const handleUpdateLearningStatus = async (studentId: number, newStatus: string) => {
+        try {
+            await axios.put(
+                `http://localhost:8080/api/students/${studentId}/learning-status`,
+                {
+                    courseId: id,
+                    status: newStatus
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`
+                    }
+                }
+            );
+
+            // Обновляем локальное состояние
+            setStudentsProgress(prev => ({
+                ...prev,
+                [studentId]: {
+                    ...prev[studentId],
+                    learningStatus: newStatus
+                }
+            }));
+            setEditingStatus({ studentId: null, tempStatus: 'В процессе' });
+        } catch (err) {
+            setError('Ошибка при обновлении статуса обучения');
+            console.error(err);
+        }
+    };
+
+    const startEditingStatus = (studentId: number, currentStatus: string) => {
+        setEditingStatus({
+            studentId,
+            tempStatus: currentStatus || 'В процессе'
+        });
+    };
+
+    const cancelEditingStatus = () => {
+        setEditingStatus({ studentId: null, tempStatus: 'В процессе' });
+    };
 
     const handleCourseChange = (field: keyof Course, value: any) => {
         if (course) {
@@ -339,9 +405,9 @@ const CourseManagePage = () => {
             <Divider sx={{ mb: 3 }} />
 
             <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)} sx={{ mb: 3 }}>
-                <Tab label="Информация" value="info" icon={<Book />} />
-                <Tab label="Материалы" value="materials" icon={<Book />} />
-                <Tab label="Группы" value="groups" icon={<Group />} />
+                <Tab label="Информация" value="info"/>
+                <Tab label="Материалы" value="materials"/>
+                <Tab label="Группы" value="groups"/>
             </Tabs>
 
             {activeTab === 'info' && (
@@ -737,25 +803,106 @@ const CourseManagePage = () => {
                                         <Table>
                                             <TableHead>
                                                 <TableRow>
-                                                    <TableCell>Имя</TableCell>
+                                                    <TableCell>ФИО</TableCell>
                                                     <TableCell>Email</TableCell>
-                                                    <TableCell>Статус</TableCell>
+                                                    <TableCell>Прогресс</TableCell>
+                                                    <TableCell>Статус обучения</TableCell>
+                                                    {isAdmin && <TableCell>Действия</TableCell>}
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                {students.map((student) => (
-                                                    <TableRow key={student.id}>
-                                                        <TableCell>{student.name}</TableCell>
-                                                        <TableCell>{student.email}</TableCell>
-                                                        <TableCell>
-                                                            <Chip
-                                                                label={student.status}
-                                                                color={student.status === 'Активный' ? 'success' : 'default'}
-                                                                size="small"
-                                                            />
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
+                                                {students.map((student) => {
+                                                    const progressData = studentsProgress[student.id];
+                                                    const isEditing = editingStatus.studentId === student.id;
+
+                                                    return (
+                                                        <TableRow key={student.id}>
+                                                            <TableCell>{student.surname} {student.name} {student.secondName}</TableCell>
+                                                            <TableCell>{student.email}</TableCell>
+                                                            <TableCell>
+                                                                {progressData ? (
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                        <Box sx={{ width: '100%', mr: 1 }}>
+                                                                            <LinearProgress
+                                                                                variant="determinate"
+                                                                                value={progressData.progress}
+                                                                            />
+                                                                        </Box>
+                                                                        <Typography variant="body2">
+                                                                            {Math.round(progressData.progress)}%
+                                                                        </Typography>
+                                                                    </Box>
+                                                                ) : (
+                                                                    <CircularProgress size={24} />
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {isEditing ? (
+                                                                    <Stack direction="row" spacing={1} alignItems="center">
+                                                                        <Select
+                                                                            value={editingStatus.tempStatus}
+                                                                            onChange={(e) => setEditingStatus(prev => ({
+                                                                                ...prev,
+                                                                                tempStatus: e.target.value
+                                                                            }))}
+                                                                            size="small"
+                                                                        >
+                                                                            <MenuItem value="В процессе">В процессе</MenuItem>
+                                                                            <MenuItem value="Завершено">Завершено</MenuItem>
+                                                                            <MenuItem value="Отчислен">Отчислен</MenuItem>
+                                                                            <MenuItem value="Академический отпуск">Академический отпуск</MenuItem>
+                                                                        </Select>
+                                                                        <IconButton
+                                                                            size="small"
+                                                                            color="primary"
+                                                                            onClick={() => {
+                                                                                handleUpdateLearningStatus(
+                                                                                    student.id,
+                                                                                    editingStatus.tempStatus
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            <Check />
+                                                                        </IconButton>
+                                                                        <IconButton
+                                                                            size="small"
+                                                                            color="error"
+                                                                            onClick={cancelEditingStatus}
+                                                                        >
+                                                                            <Close />
+                                                                        </IconButton>
+                                                                    </Stack>
+                                                                ) : (
+                                                                    <Chip
+                                                                        label={progressData?.learningStatus || 'Не указан'}
+                                                                        color={
+                                                                            progressData?.learningStatus === 'Завершено' ? 'success' :
+                                                                                progressData?.learningStatus === 'Отчислен' ? 'error' :
+                                                                                    'default'
+                                                                        }
+                                                                        onClick={() => startEditingStatus(
+                                                                            student.id,
+                                                                            progressData?.learningStatus || 'В процессе'
+                                                                        )}
+                                                                    />
+                                                                )}
+                                                            </TableCell>
+                                                            {isAdmin && (
+                                                                <TableCell>
+                                                                    <IconButton
+                                                                        color="primary"
+                                                                        onClick={() => startEditingStatus(
+                                                                            student.id,
+                                                                            progressData?.learningStatus || 'В процессе'
+                                                                        )}
+                                                                    >
+                                                                        <Edit />
+                                                                    </IconButton>
+                                                                </TableCell>
+                                                            )}
+                                                        </TableRow>
+                                                    );
+                                                })}
                                             </TableBody>
                                         </Table>
                                     </TableContainer>

@@ -3,11 +3,9 @@ package dev.lms.controllers;
 import dev.lms.dto.CourseShortDto;
 import dev.lms.dto.CreateRequestDTO;
 import dev.lms.dto.RequestDTO;
+import dev.lms.dto.StudentRegistrationDto;
 import dev.lms.jwt.JwtCore;
-import dev.lms.models.Group;
-import dev.lms.models.Request;
-import dev.lms.models.RequestStatus;
-import dev.lms.models.Worker;
+import dev.lms.models.*;
 import dev.lms.repository.*;
 import dev.lms.service.RequestService;
 import io.jsonwebtoken.Jwts;
@@ -205,4 +203,15 @@ public class RequestController {
         }
     }
 
+    @GetMapping("/groups/{selectedGroup}/students")
+    public ResponseEntity<?> getStudentsByGroup(HttpServletRequest request, @PathVariable Integer selectedGroup) {
+        Group group = groupRepository.findById(selectedGroup).orElse(null);
+        if (group == null) {
+            return ResponseEntity.status(404).body("Group not found");
+        }
+
+        List<StudentRegistrationDto> students = requestService.getAllStudentsByGroup(selectedGroup);
+
+        return ResponseEntity.ok(students);
+    }
 }

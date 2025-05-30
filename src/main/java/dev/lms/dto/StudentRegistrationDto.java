@@ -1,5 +1,6 @@
 package dev.lms.dto;
 
+import dev.lms.models.Student;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,11 +13,11 @@ public class StudentRegistrationDto {
     private String email;
     private String password;
 
-    public StudentRegistrationDto(String password, String email, String secondName, String name, String surname) {
-        this.password = password;
-        this.email = email;
-        this.secondName = secondName;
-        this.name = name;
-        this.surname = surname;
+    public StudentRegistrationDto(Student student) {
+        this.password = student.getPassword();
+        this.email = student.getEmail();
+        this.secondName = student.getMiddleName();
+        this.name = student.getFirstName();
+        this.surname = student.getLastName();
     }
 }

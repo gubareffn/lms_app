@@ -2,6 +2,7 @@ package dev.lms.repository;
 
 import dev.lms.models.Course;
 import dev.lms.models.Request;
+import dev.lms.models.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,6 +26,14 @@ public interface RequestRepository extends JpaRepository<Request, Integer> {
 
     @Query("SELECT r FROM Request r JOIN FETCH r.status JOIN FETCH r.course")
     List<Request> findAllWithRelations();
+
+    @Query("SELECT r.student FROM Request r WHERE r.group.id = :groupId")
+    List<Student> findAllStudentsByGroupId(@Param("groupId") Integer groupId);
+
+
+    @Query("SELECT s, r.progress, r.learningStatus FROM Request r JOIN r.student s WHERE r.group.id = :groupId AND r.course.id = :courseId")
+    List<Object[]> findStudentsWithProgressByGroupAndCourse(@Param("groupId") Integer groupId, @Param("courseId") Integer courseId);
+
 
     boolean existsByStudentIdAndCourseId(Long studentId, Integer courseId);
 }

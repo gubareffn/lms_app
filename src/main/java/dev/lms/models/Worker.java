@@ -39,7 +39,7 @@ public class Worker {
 //    @OneToMany(mappedBy = "worker")
 //    private Set<Request> requests = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private WorkerRole role;
 

@@ -25,7 +25,7 @@ public class EducationMaterial {
     @Column(name = "material_text")
     private String text;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 }

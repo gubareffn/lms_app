@@ -1,5 +1,7 @@
 package dev.lms.service;
 
+import dev.lms.dto.StudentRegistrationDto;
+import dev.lms.dto.StudentWithProgressDto;
 import dev.lms.dto.StudyingProgressDto;
 import dev.lms.models.Request;
 import dev.lms.models.RequestStatus;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -61,6 +65,11 @@ public class StudyingProgressService {
         progressRepository.save(progress);
     }
 
+    public List<StudentWithProgressDto> getAllStudentsWithProgressByGroup(Integer groupId) {
+        return progressRepository.findAllStudentsByGroupId(groupId).stream()
+                .map(StudentWithProgressDto::new)
+                .collect(Collectors.toList());
+    }
 
     private StudyingProgressDto convertToDto(StudyingProgress progress) {
         StudyingProgressDto dto = new StudyingProgressDto();

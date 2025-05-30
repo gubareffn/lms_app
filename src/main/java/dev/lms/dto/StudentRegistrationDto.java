@@ -12,6 +12,8 @@ public class StudentRegistrationDto {
     private String secondName;
     private String email;
     private String password;
+    private Integer percent;
+
 
     public StudentRegistrationDto(Student student) {
         this.password = student.getPassword();

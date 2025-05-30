@@ -33,7 +33,7 @@ interface CourseMaterial {
 interface Group {
     id: number;
     name: string;
-    maxStudents: number;
+    maxStudentCount: number;
     studentCount: number;
 }
 
@@ -43,13 +43,20 @@ interface Student {
     secondName: string
     surname: string
     email: string;
-    status: string;
+    percent: number;
+    statusName: string;
+    requestId: number;
 }
 
 interface StudentProgress {
     studentId: number;
     progress: number;
     learningStatus: string;
+}
+
+interface LearningStatus {
+    id: number;
+    name: string;
 }
 
 const CourseManagePage = () => {
@@ -61,16 +68,17 @@ const CourseManagePage = () => {
     const [groups, setGroups] = useState<Group[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
     const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
+    const [learningStatuses, setLearningStatuses] = useState<LearningStatus[]>([]);
     const [loading, setLoading] = useState({
         course: true,
         materials: true,
         groups: true,
+        statuses: true,
         submit: false,
         materialSaving: false
     });
     const [error, setError] = useState<string | null>(null);
 
-    // Отдельные режимы редактирования для каждой вкладки
     const [editInfoMode, setEditInfoMode] = useState(false);
     const [editMaterialsMode, setEditMaterialsMode] = useState(false);
     const [editGroupsMode, setEditGroupsMode] = useState(false);
@@ -84,7 +92,6 @@ const CourseManagePage = () => {
         tempStatus: 'В процессе'
     });
 
-    // Проверка роли пользователя
     const isAdmin = localStorage.getItem("role") === 'ADMIN';
 
     useEffect(() => {
@@ -94,32 +101,34 @@ const CourseManagePage = () => {
                     course: true,
                     materials: true,
                     groups: true,
+                    statuses: true,
                     submit: false,
                     materialSaving: false
                 });
                 setError(null);
 
-                const [courseResponse, materialsResponse, groupsResponse] = await Promise.all([
+                const [courseResponse, materialsResponse, groupsResponse, statusesResponse] = await Promise.all([
                     axios.get(`http://localhost:8080/api/courses/${id}`),
                     axios.get(`http://localhost:8080/api/material/${id}`),
-                    axios.get(`http://localhost:8080/api/groups/${id}`)
+                    axios.get(`http://localhost:8080/api/groups/${id}`),
+                    axios.get(`http://localhost:8080/api/progress/status`)
                 ]);
 
                 setCourse(courseResponse.data);
                 setMaterials(materialsResponse.data || []);
                 setGroups(groupsResponse.data || []);
-
+                setLearningStatuses(statusesResponse.data || []);
             } catch (err) {
                 setError('Не удалось загрузить данные курса');
                 console.error(err);
             } finally {
-                setLoading({
+                setLoading(prev => ({
+                    ...prev,
                     course: false,
                     materials: false,
                     groups: false,
-                    submit: false,
-                    materialSaving: false
-                });
+                    statuses: false
+                }));
             }
         };
 
@@ -131,20 +140,11 @@ const CourseManagePage = () => {
         if (selectedGroup) {
             const fetchStudentsWithProgress = async () => {
                 try {
-                    // progressResponse
                     const [studentsResponse] = await Promise.all([
-                        axios.get(`http://localhost:8080/api/requests/groups/${selectedGroup}/students`),
-                        // axios.get(`http://localhost:8080/api/studying-progress/group/${selectedGroup}/course/${id}`)
+                        axios.get(`http://localhost:8080/api/progress/groups/${selectedGroup}/students`),
                     ]);
 
                     setStudents(studentsResponse.data);
-
-                    // Преобразуем массив прогресса в объект для быстрого доступа по studentId
-                    // const progressMap = progressResponse.data.reduce((acc: Record<number, StudentProgress>, curr: StudentProgress) => {
-                    //     acc[curr.studentId] = curr;
-                    //     return acc;
-                    // }, {});
-                    // setStudentsProgress(progressMap);
                 } catch (err) {
                     setError('Не удалось загрузить список студентов');
                     console.error(err);
@@ -154,10 +154,10 @@ const CourseManagePage = () => {
         }
     }, [selectedGroup, id]);
 
-    const handleUpdateLearningStatus = async (studentId: number, newStatus: string) => {
+    const handleUpdateLearningStatus = async (studentId: number, requestId: number, newStatus: string) => {
         try {
             await axios.put(
-                `http://localhost:8080/api/students/${studentId}/learning-status`,
+                `http://localhost:8080/api/progress/${requestId}/update/status`,
                 {
                     courseId: id,
                     status: newStatus
@@ -722,7 +722,7 @@ const CourseManagePage = () => {
                                         .filter(g => !groups.some(cg => cg.id === g.id))
                                         .map(group => (
                                             <MenuItem key={group.id} value={group.id}>
-                                                {group.name} ({group.studentCount}/{group.maxStudents})
+                                                {group.name} ({group.studentCount}/{group.maxStudentCount})
                                             </MenuItem>
                                         ))}
                                 </Select>
@@ -760,12 +760,12 @@ const CourseManagePage = () => {
                                             >
                                                 <TableCell>{group.name}</TableCell>
                                                 <TableCell>
-                                                    {group.studentCount}/{group.maxStudents}
+                                                    {group.studentCount}/{group.maxStudentCount}
                                                 </TableCell>
                                                 <TableCell>
                                                     <Chip
-                                                        label={group.studentCount < group.maxStudents ? 'Доступна' : 'Заполнена'}
-                                                        color={group.studentCount < group.maxStudents ? 'success' : 'error'}
+                                                        label={group.studentCount < group.maxStudentCount ? 'Доступна' : 'Заполнена'}
+                                                        color={group.studentCount < group.maxStudentCount ? 'success' : 'error'}
                                                         size="small"
                                                     />
                                                 </TableCell>
@@ -820,21 +820,17 @@ const CourseManagePage = () => {
                                                             <TableCell>{student.surname} {student.name} {student.secondName}</TableCell>
                                                             <TableCell>{student.email}</TableCell>
                                                             <TableCell>
-                                                                {progressData ? (
-                                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                                        <Box sx={{ width: '100%', mr: 1 }}>
-                                                                            <LinearProgress
-                                                                                variant="determinate"
-                                                                                value={progressData.progress}
-                                                                            />
-                                                                        </Box>
-                                                                        <Typography variant="body2">
-                                                                            {Math.round(progressData.progress)}%
-                                                                        </Typography>
+                                                                <Box sx={{display: 'flex', alignItems: 'center'}}>
+                                                                    <Box sx={{width: '100%', mr: 1}}>
+                                                                        <LinearProgress
+                                                                            variant="determinate"
+                                                                            value={student.percent}
+                                                                        />
                                                                     </Box>
-                                                                ) : (
-                                                                    <CircularProgress size={24} />
-                                                                )}
+                                                                    <Typography variant="body2">
+                                                                        {Math.round(student.percent)}
+                                                                    </Typography>
+                                                                </Box>
                                                             </TableCell>
                                                             <TableCell>
                                                                 {isEditing ? (
@@ -847,10 +843,11 @@ const CourseManagePage = () => {
                                                                             }))}
                                                                             size="small"
                                                                         >
-                                                                            <MenuItem value="В процессе">В процессе</MenuItem>
-                                                                            <MenuItem value="Завершено">Завершено</MenuItem>
-                                                                            <MenuItem value="Отчислен">Отчислен</MenuItem>
-                                                                            <MenuItem value="Академический отпуск">Академический отпуск</MenuItem>
+                                                                            {learningStatuses.map(status => (
+                                                                                <MenuItem key={status.id} value={status.name}>
+                                                                                    {status.name}
+                                                                                </MenuItem>
+                                                                            ))}
                                                                         </Select>
                                                                         <IconButton
                                                                             size="small"
@@ -858,6 +855,7 @@ const CourseManagePage = () => {
                                                                             onClick={() => {
                                                                                 handleUpdateLearningStatus(
                                                                                     student.id,
+                                                                                    student.requestId,
                                                                                     editingStatus.tempStatus
                                                                                 );
                                                                             }}
@@ -874,15 +872,15 @@ const CourseManagePage = () => {
                                                                     </Stack>
                                                                 ) : (
                                                                     <Chip
-                                                                        label={progressData?.learningStatus || 'Не указан'}
+                                                                        label={student.statusName || 'Не указан'}
                                                                         color={
-                                                                            progressData?.learningStatus === 'Завершено' ? 'success' :
-                                                                                progressData?.learningStatus === 'Отчислен' ? 'error' :
+                                                                            student?.statusName === 'Завершено' ? 'success' :
+                                                                                student?.statusName === 'Отчислен' ? 'error' :
                                                                                     'default'
                                                                         }
                                                                         onClick={() => startEditingStatus(
                                                                             student.id,
-                                                                            progressData?.learningStatus || 'В процессе'
+                                                                            student?.statusName || 'В процессе'
                                                                         )}
                                                                     />
                                                                 )}
@@ -893,7 +891,7 @@ const CourseManagePage = () => {
                                                                         color="primary"
                                                                         onClick={() => startEditingStatus(
                                                                             student.id,
-                                                                            progressData?.learningStatus || 'В процессе'
+                                                                            student?.statusName || 'В процессе'
                                                                         )}
                                                                     >
                                                                         <Edit />

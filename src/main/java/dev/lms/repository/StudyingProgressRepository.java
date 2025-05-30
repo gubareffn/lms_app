@@ -14,7 +14,9 @@ public interface StudyingProgressRepository extends JpaRepository<StudyingProgre
     Optional<StudyingProgress> findByRequest(Request request);
 
 
-    @Query("SELECT e.request FROM StudyingProgress e WHERE e.request.g = :groupId")
-    List<Request> findAllProgress(@Param("groupId") Integer groupId);
+    @Query("SELECT s, s.request.student FROM StudyingProgress s JOIN FETCH s.status WHERE s.request.group.id = :groupId")
+    List<StudyingProgress> findAllStudentsByGroupId(@Param("groupId") Integer groupId);
 
+    @Query("SELECT s FROM StudyingProgress s WHERE s.request.id = :requestId")
+    StudyingProgress findByRequestId(@Param("requestId") Integer requestId);
 }

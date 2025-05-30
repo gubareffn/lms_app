@@ -31,9 +31,5 @@ public interface RequestRepository extends JpaRepository<Request, Integer> {
     List<Student> findAllStudentsByGroupId(@Param("groupId") Integer groupId);
 
 
-    @Query("SELECT s, r.progress, r.learningStatus FROM Request r JOIN r.student s WHERE r.group.id = :groupId AND r.course.id = :courseId")
-    List<Object[]> findStudentsWithProgressByGroupAndCourse(@Param("groupId") Integer groupId, @Param("courseId") Integer courseId);
-
-
     boolean existsByStudentIdAndCourseId(Long studentId, Integer courseId);
 }

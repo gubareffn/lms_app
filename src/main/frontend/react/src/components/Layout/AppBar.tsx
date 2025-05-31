@@ -27,6 +27,44 @@ export default function NavigationBar() {
         setAnchorElUser(null);
     };
 
+    const decodeJwt = (token: string | null) => {
+        if (!token) return null;
+
+        try {
+            // JWT состоит из 3 частей, разделенных точками: header.payload.signature
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(
+                atob(base64)
+                    .split('')
+                    .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join('')
+            );
+
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            console.error('Failed to decode JWT', e);
+            return null;
+        }
+    };
+
+    const getProfilePath = () => {
+        const userType = localStorage.getItem("userType");
+        const token = localStorage.getItem("token");
+
+        const decodedToken = decodeJwt(token);
+        const userId = decodedToken.id;
+
+
+        if (userType === "STUDENT") {
+            return `/profile/student/${userId}`;
+        } else if (userType === "TEACHER" || userType === "ADMIN") {
+            return `/profile/worker/${userId}`;
+        }
+        return "/profile";
+    };
+
+
     return (
         <Box sx={{ flexGrow: 1 }}>
             <AppBar position="fixed">
@@ -118,11 +156,11 @@ export default function NavigationBar() {
                                         color="inherit"
                                         sx={{
                                             display: 'flex',
-                                            flexDirection: 'row-reverse', // или просто поменять местами элементы
+                                            flexDirection: 'row-reverse',
                                             gap: 1,
                                             p: 0,
                                             "&:hover": {
-                                                backgroundColor: 'transparent' // убрать фон при наведении, если нужно
+                                                backgroundColor: 'transparent'
                                             }
                                         }}
                                     >
@@ -148,7 +186,7 @@ export default function NavigationBar() {
                                     open={Boolean(anchorElUser)}
                                     onClose={handleCloseUserMenu}
                                 >
-                                    <MenuItem component={Link} to="/profile">Профиль</MenuItem>
+                                    <MenuItem component={Link} to={getProfilePath()}>Профиль</MenuItem>
                                     <MenuItem onClick={logout}>Выйти</MenuItem>
                                 </Menu>
                             </Box>

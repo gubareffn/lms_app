@@ -3,7 +3,7 @@ import {
     Box, Typography, Divider, Paper, TextField, Button,
     Stack, IconButton, CircularProgress, Alert, List, ListItem,
     Tabs, Tab, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Chip, Select, MenuItem, LinearProgress
+    TableHead, TableRow, Chip, Select, MenuItem, LinearProgress, Modal
 } from '@mui/material';
 import {Add, Delete, Edit, Save, Cancel, People, Book, Group, Check, Close} from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -59,6 +59,17 @@ interface LearningStatus {
     name: string;
 }
 
+interface Document {
+    id: number;
+    urlAddress: string;
+    createDate: string;
+}
+
+interface DocumentType {
+    id: number;
+    name: string;
+}
+
 const CourseManagePage = () => {
     const { id } = useParams<{ id: string }>();
     const { user } = useAuth();
@@ -92,7 +103,16 @@ const CourseManagePage = () => {
         tempStatus: 'В процессе'
     });
 
+    const [uploadModalOpen, setUploadModalOpen] = useState(false);
+    const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+    const [file, setFile] = useState<File | null>(null);
+    const [studentDocuments, setStudentDocuments] = useState<Record<number, Document[]>>({});
+
     const isAdmin = localStorage.getItem("role") === 'ADMIN';
+
+    const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+    const [selectedDocType, setSelectedDocType] = useState<number | null>(null);
+    const [loadingDocTypes, setLoadingDocTypes] = useState(false)
 
     useEffect(() => {
         const fetchCourseData = async () => {
@@ -153,6 +173,63 @@ const CourseManagePage = () => {
             fetchStudentsWithProgress();
         }
     }, [selectedGroup, id]);
+
+
+    const handleOpenUploadModal = (studentId: number) => {
+        setSelectedStudentId(studentId);
+        setUploadModalOpen(true);
+        fetchDocumentTypes();
+    };
+
+    const fetchDocumentTypes = async () => {
+        try {
+            setLoadingDocTypes(true);
+            const response = await axios.get('http://localhost:8080/api/document-type', {
+                headers: {
+                    'Authorization': `Bearer ${user?.token}`
+                }
+            });
+            setDocumentTypes(response.data);
+        } catch (err) {
+            setError('Не удалось загрузить типы документов');
+            console.error(err);
+        } finally {
+            setLoadingDocTypes(false);
+        }
+    };
+
+// Модифицируем функцию загрузки файла
+    const handleFileUpload = async () => {
+        if (!file || !selectedStudentId || !selectedDocType) {
+            setError('Выберите файл и тип документа');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('documentTypeId', selectedDocType.toString());
+
+            const response = await axios.post(
+                `http://localhost:8080/api/documents/upload/${selectedStudentId}`,
+                formData,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+            );
+
+            setUploadModalOpen(false);
+            setFile(null);
+            setSelectedDocType(null);
+            alert('Документ успешно загружен');
+        } catch (err) {
+            setError('Ошибка при загрузке файла');
+            console.error(err);
+        }
+    };
 
     const handleUpdateLearningStatus = async (studentId: number, requestId: number, newStatus: string) => {
         try {
@@ -807,14 +884,13 @@ const CourseManagePage = () => {
                                                     <TableCell>Email</TableCell>
                                                     <TableCell>Прогресс</TableCell>
                                                     <TableCell>Статус обучения</TableCell>
+                                                    <TableCell>Документы</TableCell>
                                                     {isAdmin && <TableCell>Действия</TableCell>}
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
                                                 {students.map((student) => {
-                                                    const progressData = studentsProgress[student.id];
                                                     const isEditing = editingStatus.studentId === student.id;
-
                                                     return (
                                                         <TableRow key={student.id}>
                                                             <TableCell>{student.surname} {student.name} {student.secondName}</TableCell>
@@ -885,19 +961,17 @@ const CourseManagePage = () => {
                                                                     />
                                                                 )}
                                                             </TableCell>
-                                                            {isAdmin && (
-                                                                <TableCell>
-                                                                    <IconButton
-                                                                        color="primary"
-                                                                        onClick={() => startEditingStatus(
-                                                                            student.id,
-                                                                            student?.statusName || 'В процессе'
-                                                                        )}
-                                                                    >
-                                                                        <Edit />
-                                                                    </IconButton>
-                                                                </TableCell>
-                                                            )}
+                                                            <TableCell>
+                                                                <Button
+                                                                    size="small"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleOpenUploadModal(student.requestId);
+                                                                    }}
+                                                                >
+                                                                    Загрузить
+                                                                </Button>
+                                                            </TableCell>
                                                         </TableRow>
                                                     );
                                                 })}
@@ -910,6 +984,62 @@ const CourseManagePage = () => {
                     </Stack>
                 </Box>
             )}
+            <Modal open={uploadModalOpen} onClose={() => setUploadModalOpen(false)}>
+                <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 400,
+                    bgcolor: 'background.paper',
+                    boxShadow: 24,
+                    p: 4,
+                }}>
+                    <Typography variant="h6" mb={2}>
+                        Загрузить документ
+                    </Typography>
+
+                    {loadingDocTypes ? (
+                        <CircularProgress />
+                    ) : (
+                        <>
+                            <Select
+                                value={selectedDocType || ''}
+                                onChange={(e) => setSelectedDocType(Number(e.target.value))}
+                                displayEmpty
+                                fullWidth
+                                sx={{ mb: 2 }}
+                            >
+                                <MenuItem value="" disabled>
+                                    Выберите тип документа
+                                </MenuItem>
+                                {documentTypes.map((type) => (
+                                    <MenuItem key={type.id} value={type.id}>
+                                        {type.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+
+                            <input
+                                type="file"
+                                accept=".pdf,.doc,.docx"
+                                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                                style={{ marginBottom: '16px' }}
+                            />
+
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <Button
+                                    variant="contained"
+                                    onClick={handleFileUpload}
+                                    disabled={!file || !selectedDocType}
+                                >
+                                    Загрузить
+                                </Button>
+                            </Box>
+                        </>
+                    )}
+                </Box>
+            </Modal>
         </Box>
     );
 };

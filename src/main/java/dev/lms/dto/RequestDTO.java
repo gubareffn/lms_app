@@ -22,7 +22,9 @@ public class RequestDTO {
     private LocalDateTime createTime;
     private LocalDateTime processingTime;
     private String requestText;
-    private String courseName;       // Добавлено
-
+    private String courseName;
+    private String studentFirstName;
+    private String studentMiddleName;
+    private String studentLastName;
 }
 

@@ -50,5 +50,13 @@ public class Worker {
             inverseJoinColumns = @JoinColumn(name = "course_id")
     )
     private List<Course> course;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "worker_document",
+            joinColumns = @JoinColumn(name = "worker_id"),
+            inverseJoinColumns = @JoinColumn(name = "document_id")
+    )
+    private Set<Document> worker = new HashSet<Document>();
 }
 

@@ -30,6 +30,9 @@ public interface RequestRepository extends JpaRepository<Request, Integer> {
     @Query("SELECT r.student FROM Request r WHERE r.group.id = :groupId")
     List<Student> findAllStudentsByGroupId(@Param("groupId") Integer groupId);
 
+    @Query("SELECT r.student FROM Request r WHERE r.id = :requestId")
+    Student findStudentByRequestId(@Param("requestId") Integer requestId);
+
 
     boolean existsByStudentIdAndCourseId(Long studentId, Integer courseId);
 }

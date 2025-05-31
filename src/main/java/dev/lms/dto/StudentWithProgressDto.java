@@ -18,7 +18,6 @@ public class StudentWithProgressDto {
     private String statusName;
     private Integer requestId;
 
-
     public StudentWithProgressDto(StudyingProgress progress) {
         this.password = progress.getRequest().getStudent().getPassword();
         this.email = progress.getRequest().getStudent().getEmail();

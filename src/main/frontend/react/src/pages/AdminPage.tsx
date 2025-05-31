@@ -14,7 +14,9 @@ import { useAuth } from "../components/AuthContext";
 interface Request {
     id: number;
     studentId: number;
-    studentName: string;
+    studentFirstName: string;
+    studentMiddleName: string;
+    studentLastName: string;
     studentEmail: string;
     courseId: number;
     courseName: string;
@@ -225,7 +227,7 @@ const AdminPage = () => {
     };
 
     const handleNavigateToStudent = (studentId: number) => {
-        navigate(`/students/${studentId}`);
+        navigate(`/profile/student/${studentId}`);
     };
 
     if (loading.requests || loading.statuses || loading.groups) {
@@ -255,7 +257,7 @@ const AdminPage = () => {
                             <ListItemIcon>
                                 <Book />
                             </ListItemIcon>
-                            <ListItemText primary="Одобрение заявок" />
+                            <ListItemText primary="Обработка заявок" />
                         </ListItemButton>
                     </ListItem>
 
@@ -285,7 +287,7 @@ const AdminPage = () => {
                 </List>
             </Paper>
 
-            <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+            <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
                 {activeTab === 'all-requests' && (
                     <Box>
                         <Typography variant="h5" gutterBottom>
@@ -298,7 +300,10 @@ const AdminPage = () => {
                             </Alert>
                         )}
 
-                        <TableContainer component={Paper}>
+                        <TableContainer component={Paper} sx={{
+                            width: '100%',
+                            overflowX: 'auto'
+                        }}>
                             <Table>
                                 <TableHead>
                                     <TableRow>
@@ -328,7 +333,7 @@ const AdminPage = () => {
                                                         sx={{ display: 'flex', alignItems: 'center' }}
                                                     >
                                                         <Person sx={{ mr: 1 }} />
-                                                        {request.studentName}
+                                                        {request.studentLastName} {request.studentFirstName} {request.studentMiddleName}
                                                     </Link>
                                                     <Typography variant="body2" color="text.secondary">
                                                         {request.studentEmail}

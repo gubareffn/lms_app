@@ -38,4 +38,6 @@ public class AuthController {
     public ResponseEntity<AuthResponse> loginWorker(@RequestBody AuthRequest request) {
         return ResponseEntity.ok(authService.authenticateWorker(request));
     }
+
+
 }

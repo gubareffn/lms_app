@@ -21,8 +21,22 @@ public class StudentController {
         this.studentRepository = studentRepository;
     }
 
+    @GetMapping("/profile/{studentId}")
+    public ResponseEntity<StudentProfileDto> getStudentProfile(@PathVariable Integer studentId) {
+
+        Student student = studentRepository.findById(Long.valueOf(studentId))
+                .orElseThrow(() -> new UsernameNotFoundException("Student not found"));
+
+        return ResponseEntity.ok(new StudentProfileDto(
+                student.getFirstName(),
+                student.getLastName(),
+                student.getMiddleName(),
+                student.getEmail()
+        ));
+    }
+
     @GetMapping("/profile")
-    public ResponseEntity<StudentProfileDto> getProfile(Authentication authentication) {
+    public ResponseEntity<StudentProfileDto> getMyProfile(Authentication authentication) {
         String email = authentication.getName();
 
         Student student = studentRepository.findByEmail(email)

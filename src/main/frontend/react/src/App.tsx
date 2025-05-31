@@ -35,7 +35,8 @@ function App() {
                 <main style={{ marginTop: "64px" }}> {/* Отступ под AppBar */}
                     <Routes>
                         <Route path="/" element={<HomePage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/profile/student/:id" element={<ProfilePage />} />
+                        <Route path="/profile/worker/:id" element={<ProfilePage />} />
                         <Route path="/students/:id" element={<ProfilePage />} />
                         <Route path="/courses" element={<CourseList />} />
                         <Route path="/courses/:id" element={<CoursePage />} />

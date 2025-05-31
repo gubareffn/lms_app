@@ -10,10 +10,23 @@ import {
     ListItem,
     ListItemText,
     Chip,
-    CircularProgress
+    CircularProgress,
+    Tabs,
+    Tab,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    IconButton,
+    Alert,
+    Snackbar
 } from '@mui/material';
 import { useAuth } from "../components/AuthContext";
 import axios from 'axios';
+import { Download, Description, Delete } from '@mui/icons-material';
+import { useParams, useNavigate } from "react-router-dom";
 
 interface UserProfile {
     id: number;
@@ -23,48 +36,109 @@ interface UserProfile {
     email: string;
     role?: string;
     userType: 'STUDENT' | 'TEACHER' | 'ADMIN';
-    courses?: Array<{
-        id: number;
-        title: string;
-        status: string;
-    }>;
-    requests?: Array<{
-        id: number;
-        title: string;
-        status: string;
-    }>;
+    joinDate: string;
+}
+
+interface Document {
+    id: number;
+    fileName: string;
+    filePath: string;  // Изменили urlAddress на filePath для соответствия API
+    createDate: string;
+    type: string;
 }
 
 const ProfilePage = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [documents, setDocuments] = useState<Document[]>([]);
+    const [loading, setLoading] = useState({
+        profile: true,
+        documents: true
+    });
     const [error, setError] = useState('');
-    const userRole = localStorage.getItem("userType")
+    const [activeTab, setActiveTab] = useState('profile');
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const userRole = localStorage.getItem("userType");
+    const { id: userId } = useParams<{ id: string }>();
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchData = async () => {
             try {
-                const response = await axios.get(`http://localhost:8080/api/students/profile`, {
+                setLoading({ profile: true, documents: true });
+                setError('');
+
+                // Загрузка профиля
+                const profileResponse = await axios.get(`http://localhost:8080/api/students/profile/${userId}`, {
                     headers: {
                         Authorization: `Bearer ${user?.token}`
                     }
                 });
-                setProfile(response.data);
+                setProfile(profileResponse.data);
+
+                // Загрузка документов
+                const docsResponse = await axios.get(`http://localhost:8080/api/documents/student/${userId}`, {
+                    headers: {
+                        Authorization: `Bearer ${user?.token}`
+                    }
+                });
+                setDocuments(docsResponse.data);
+
             } catch (err) {
-                setError('Не удалось загрузить профиль');
+                setError('Не удалось загрузить данные');
                 console.error(err);
             } finally {
-                setLoading(false);
+                setLoading({ profile: false, documents: false });
             }
         };
 
-        if (user) {
-            fetchProfile();
-        }
-    }, [user]);
+        fetchData();
+    }, [user, userId]);
 
-    if (loading) {
+    const handleDownload = async (filename: string) => {
+        try {
+            // Открываем файл в новой вкладке для скачивания
+            window.open(`http://localhost:8080/api/documents/download/${filename}`, '_blank');
+        } catch (err) {
+            setSnackbarMessage('Ошибка при скачивании файла');
+            setSnackbarOpen(true);
+            console.error(err);
+        }
+    };
+
+    const handleDeleteDocument = async (docId: number) => {
+        if (!window.confirm('Вы уверены, что хотите удалить этот документ?')) return;
+
+        try {
+            await axios.delete(`http://localhost:8080/api/documents/${docId}`, {
+                headers: {
+                    Authorization: `Bearer ${user?.token}`
+                }
+            });
+
+            setDocuments(documents.filter(doc => doc.id !== docId));
+            setSnackbarMessage('Документ успешно удален');
+            setSnackbarOpen(true);
+        } catch (err) {
+            setSnackbarMessage('Ошибка при удалении документа');
+            setSnackbarOpen(true);
+            console.error(err);
+        }
+    };
+
+    const formatDate = (dateString: string) => {
+        const options: Intl.DateTimeFormatOptions = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        };
+        return new Date(dateString).toLocaleDateString('ru-RU', options);
+    };
+
+    if (loading.profile) {
         return (
             <Box display="flex" justifyContent="center" mt={4}>
                 <CircularProgress />
@@ -85,7 +159,7 @@ const ProfilePage = () => {
     }
 
     return (
-        <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
+        <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
             <Paper elevation={3} sx={{ p: 4 }}>
                 <Box display="flex" alignItems="center" mb={4}>
                     <Avatar
@@ -104,95 +178,141 @@ const ProfilePage = () => {
                         <Typography variant="h4" component="h1">
                             {profile.lastName} {profile.firstName} {profile.middleName}
                         </Typography>
-
-                        <Box display="flex" alignItems="center" mt={1}>
-                            <Typography variant="subtitle1" color="text.secondary">
-                                {profile.email}
-                                {profile.role}
-                                {profile.userType}
-                            </Typography>
-
-                            <Chip
-                                label={
-                                    userRole === 'STUDENT' ? 'Студент' :
-                                        userRole === 'TEACHER' ? 'Преподаватель' : 'Администратор'
-                                }
-
-                                color={
-                                    userRole === 'ADMIN' ? 'error' :
-                                        userRole === 'TEACHER' ? 'warning' : 'primary'
-                                }
-                                size="small"
-                                sx={{ ml: 2 }}
-                            />
-                        </Box>
+                        <Typography variant="subtitle1" color="text.secondary" mt={1}>
+                            {profile.email}
+                        </Typography>
+                        <Chip
+                            label={profile.userType === 'STUDENT' ? 'Студент' :
+                                profile.userType === 'TEACHER' ? 'Преподаватель' : 'Администратор'}
+                            color="primary"
+                            size="small"
+                            sx={{ mt: 1 }}
+                        />
                     </Box>
                 </Box>
 
                 <Divider sx={{ my: 3 }} />
 
-                {userRole === 'STUDENT' && (
-                    <Box mb={4}>
+                {/* Вкладки */}
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                    <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
+                        <Tab label="Профиль" value="profile" />
+                        <Tab label="Документы" value="documents" />
+                    </Tabs>
+                </Box>
 
+                {/* Содержимое вкладки "Профиль" */}
+                {activeTab === 'profile' && (
+                    <Box>
+                        <List>
+                            <ListItem>
+                                <ListItemText
+                                    primary="Дата регистрации"
+                                    secondary={formatDate(profile.joinDate)}
+                                />
+                            </ListItem>
+                            <ListItem>
+                                <ListItemText
+                                    primary="Роль в системе"
+                                    secondary={profile.role || 'Не указана'}
+                                />
+                            </ListItem>
+                        </List>
                     </Box>
                 )}
 
-                {profile.userType === 'TEACHER' && (
-                    <Box mb={4}>
-                        <Typography variant="h6" gutterBottom>
-                            Мои заявки
-                        </Typography>
-                        {profile.requests?.length ? (
-                            <List>
-                                {profile.requests.map(request => (
-                                    <ListItem key={request.id}>
-                                        <ListItemText
-                                            primary={request.title}
-                                            secondary={`Статус: ${request.status}`}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
+                {/* Содержимое вкладки "Документы" */}
+                {activeTab === 'documents' && (
+                    <Box>
+                        {loading.documents ? (
+                            <CircularProgress />
+                        ) : documents.length > 0 ? (
+                            <TableContainer component={Paper}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Название документа</TableCell>
+                                            <TableCell>Тип</TableCell>
+                                            <TableCell>Дата загрузки</TableCell>
+                                            <TableCell>Действия</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {documents.map((doc) => (
+                                            <TableRow key={doc.id}>
+                                                <TableCell>
+                                                    <Box display="flex" alignItems="center">
+                                                        <Description color="primary" sx={{ mr: 1 }} />
+                                                        <Typography>{doc.fileName}</Typography>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Chip label={doc.type} size="small" />
+                                                </TableCell>
+                                                <TableCell>{formatDate(doc.createDate)}</TableCell>
+                                                <TableCell>
+                                                    <IconButton
+                                                        onClick={() => handleDownload(doc.fileName)}
+                                                        color="primary"
+                                                        title="Скачать"
+                                                    >
+                                                        <Download />
+                                                    </IconButton>
+                                                    {/*{(user?.id === profile.id || userRole === 'ADMIN') && (*/}
+                                                    {/*    <IconButton*/}
+                                                    {/*        onClick={() => handleDeleteDocument(doc.id)}*/}
+                                                    {/*        color="error"*/}
+                                                    {/*        title="Удалить"*/}
+                                                    {/*    >*/}
+                                                    {/*        <Delete />*/}
+                                                    {/*    </IconButton>*/}
+                                                    {/*)}*/}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
                         ) : (
-                            <Typography color="text.secondary">Нет активных заявок</Typography>
+                            <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                                Нет загруженных документов
+                            </Typography>
                         )}
                     </Box>
                 )}
 
-                {profile.userType === 'ADMIN' && (
-                    <Box mb={4}>
-                        <Typography variant="h6" gutterBottom>
-                            Административные функции
-                        </Typography>
-                        <Box display="flex" gap={2}>
-                            <Button variant="contained" color="error" href="/admin/users">
-                                Управление пользователями
-                            </Button>
-                            <Button variant="contained" color="secondary" href="/admin/courses">
-                                Управление курсами
-                            </Button>
-                        </Box>
-                    </Box>
-                )}
-
-                <Box display="flex" justifyContent="space-between" mt={4}>
+                <Box display="flex" justifyContent="flex-end" mt={4}>
                     <Button
-                        variant="outlined"
-                        color="primary"
-                        href="/profile/edit"
+                        variant="contained"
+                        onClick={() => navigate(-1)}
+                        sx={{ mr: 2 }}
                     >
-                        Редактировать профиль
+                        Назад
                     </Button>
-
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={logout}
-                    >
-                        Выйти
-                    </Button>
+                    {/*{(user?.id === profile.id || userRole === 'ADMIN') && (*/}
+                    {/*    <Button*/}
+                    {/*        variant="contained"*/}
+                    {/*        color="primary"*/}
+                    {/*        onClick={() => navigate(`/profile/${userId}/upload`)}*/}
+                    {/*    >*/}
+                    {/*        Загрузить документ*/}
+                    {/*    </Button>*/}
+                    {/*)}*/}
                 </Box>
             </Paper>
+
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={6000}
+                onClose={() => setSnackbarOpen(false)}
+            >
+                <Alert
+                    onClose={() => setSnackbarOpen(false)}
+                    severity={snackbarMessage.includes('Ошибка') ? 'error' : 'success'}
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

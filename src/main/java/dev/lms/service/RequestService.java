@@ -72,6 +72,9 @@ public class RequestService {
                 .processingTime(request.getProcessingTime())
                 .requestText(request.getRequestText())
                 .courseName(request.getCourse().getName())
+                .studentFirstName(request.getStudent().getFirstName())
+                .studentLastName(request.getStudent().getLastName())
+                .studentMiddleName(request.getStudent().getMiddleName())
                 .build();
     }
 

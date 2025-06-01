@@ -2,6 +2,7 @@ package dev.lms.controllers;
 
 
 import dev.lms.dto.DocumentDto;
+import dev.lms.dto.StudyingProgressDto;
 import dev.lms.jwt.JwtCore;
 import dev.lms.models.*;
 import dev.lms.repository.*;
@@ -113,8 +114,9 @@ public class DocumentController {
             document.getWorker().add(worker);
 
             Document savedDocument = documentRepository.save(document);
+            DocumentDto documentDto = new DocumentDto(savedDocument);
 
-            return ResponseEntity.ok(savedDocument);
+            return ResponseEntity.ok(documentDto);
 
         } catch (IOException e) {
             return ResponseEntity.badRequest().body("Failed to upload file: " + e.getMessage());

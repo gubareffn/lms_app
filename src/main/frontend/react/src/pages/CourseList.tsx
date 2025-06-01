@@ -214,7 +214,7 @@ const CourseList = () => {
                                 },
                                 borderLeft: `4px solid ${
                                     course.status === 'Идёт набор' ? '#4caf50' :
-                                        course.status === 'Активен' ? '#ff9800' : '#f44336'
+                                        course.status === 'Уже начался' ? '#ff9800' : '#f44336'
                                 }`
                             }}
                         >
@@ -241,10 +241,10 @@ const CourseList = () => {
                                         sx={{
                                             backgroundColor:
                                                 course.status === 'Идёт набор' ? '#e8f5e9' :
-                                                    course.status === 'Активен' ? '#fff3e0' : '#ffebee',
+                                                    course.status === 'Уже начался' ? '#fff3e0' : '#ffebee',
                                             color:
                                                 course.status === 'Идёт набор' ? '#2e7d32' :
-                                                    course.status === 'Активен' ? '#e65100' : '#c62828',
+                                                    course.status === 'Уже начался' ? '#e65100' : '#c62828',
                                             fontWeight: 500
                                         }}
                                     />

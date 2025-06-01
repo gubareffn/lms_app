@@ -12,18 +12,18 @@ import {
 import axios from 'axios';
 
 interface StudentFormData {
-    surname: string;
-    name: string;
-    secondName: string;
+    lastName: string;
+    firstName: string;
+    middleName: string;
     password: string;
     email: string;
 }
 
 const SignUpPage = () => {
     const [formData, setFormData] = useState<StudentFormData>({
-        surname: '',
-        name: '',
-        secondName: '',
+        lastName: '',
+        firstName: '',
+        middleName: '',
         email: '',
         password: ''
     });
@@ -45,9 +45,9 @@ const SignUpPage = () => {
 
         try {
             const response = await axios.post('http://localhost:8080/api/auth/register/student', {
-                surname: formData.surname,
-                name: formData.name,
-                secondName: formData.secondName,
+                lastName: formData.lastName,
+                firstName: formData.firstName,
+                middleName: formData.middleName,
                 password: formData.password,
                 email: formData.email
             });
@@ -56,9 +56,9 @@ const SignUpPage = () => {
             setSnackbarOpen(true);
 
             setFormData({
-                surname: '',
-                name: '',
-                secondName: '',
+                lastName: '',
+                firstName: '',
+                middleName: '',
                 email: '',
                 password: ''
             });
@@ -100,8 +100,8 @@ const SignUpPage = () => {
                         fullWidth
                         margin="normal"
                         label="Фамилия"
-                        name="surname"
-                        value={formData.surname}
+                        name="lastName"
+                        value={formData.lastName}
                         onChange={handleChange}
                         required
                     />
@@ -110,8 +110,8 @@ const SignUpPage = () => {
                         fullWidth
                         margin="normal"
                         label="Имя"
-                        name="name"
-                        value={formData.name}
+                        name="firstName"
+                        value={formData.firstName}
                         onChange={handleChange}
                         required
                     />
@@ -120,8 +120,8 @@ const SignUpPage = () => {
                         fullWidth
                         margin="normal"
                         label="Отчество"
-                        name="secondName"
-                        value={formData.secondName}
+                        name="middleName"
+                        value={formData.middleName}
                         onChange={handleChange}
                         required
                     />

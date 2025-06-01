@@ -1,10 +1,7 @@
 package dev.lms.service;
 
 
-import dev.lms.dto.CourseShortDto;
-import dev.lms.dto.CreateRequestDTO;
-import dev.lms.dto.RequestDTO;
-import dev.lms.dto.StudentRegistrationDto;
+import dev.lms.dto.*;
 import dev.lms.models.Course;
 import dev.lms.models.Request;
 import dev.lms.models.RequestStatus;
@@ -30,7 +27,7 @@ public class RequestService {
     private final RequestStatusRepository requestStatusRepository;
 
     @Transactional
-    public RequestDTO createRequest(CreateRequestDTO dto, Long studentId) {
+    public RequestDto createRequest(CreateRequestDTO dto, Long studentId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
 
@@ -57,12 +54,12 @@ public class RequestService {
         Request savedRequest = requestRepository.save(request);
 
         // Преобразуем сохраненную заявку в DTO и возвращаем
-        return convertToDTO(savedRequest);
+        return new RequestDto(savedRequest);
     }
 
     // Вспомогательный метод для преобразования Request в RequestDTO
-    private RequestDTO convertToDTO(Request request) {
-        return RequestDTO.builder()
+    private RequestDTOBuilder convertToDTO(Request request) {
+        return RequestDTOBuilder.builder()
                 .id(request.getId())
                 .studentId(request.getStudent().getId())
                 .courseId(request.getCourse().getId())
@@ -78,13 +75,13 @@ public class RequestService {
                 .build();
     }
 
-    public List<RequestDTO> getAllRequests() {
+    public List<RequestDTOBuilder> getAllRequests() {
         return requestRepository.findAllWithRelations().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public List<RequestDTO> getRequestsByStudent(Integer studentId) {
+    public List<RequestDTOBuilder> getRequestsByStudent(Integer studentId) {
         return requestRepository.findAllRequestsByStudentId(studentId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

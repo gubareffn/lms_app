@@ -4,10 +4,12 @@ import dev.lms.models.Request;
 import dev.lms.models.Student;
 import dev.lms.models.StudyingProgress;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class StudentWithProgressDto {
     private String surname;
     private String name;

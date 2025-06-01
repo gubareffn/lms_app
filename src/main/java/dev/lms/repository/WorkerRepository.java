@@ -24,8 +24,6 @@ public interface WorkerRepository extends JpaRepository<Worker, Long> {
     @Query("SELECT w FROM Worker w JOIN FETCH w.role where w.email=:email")
     Optional<Worker> findByEmail(@Param(value = "email") String email);
 
-//    Optional<Worker> findByEmail(String email);
-
     @Query("SELECT w FROM Worker w JOIN FETCH w.role WHERE w.id = :workerId")
     Optional<Worker> findByIdWithRelations(@Param("workerId") Integer workerId);
 

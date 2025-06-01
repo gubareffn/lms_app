@@ -32,9 +32,9 @@ public class AuthService {
         }
 
         Student student = new Student();
-        student.setLastName(dto.getSurname());
-        student.setFirstName(dto.getName());
-        student.setMiddleName(dto.getSecondName());
+        student.setLastName(dto.getLastName());
+        student.setFirstName(dto.getFirstName());
+        student.setMiddleName(dto.getMiddleName());
         student.setEmail(dto.getEmail());
         student.setPassword(passwordEncoder.encode(dto.getPassword()));
 

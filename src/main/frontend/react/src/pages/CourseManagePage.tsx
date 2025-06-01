@@ -108,11 +108,19 @@ const CourseManagePage = () => {
     const [file, setFile] = useState<File | null>(null);
     const [studentDocuments, setStudentDocuments] = useState<Record<number, Document[]>>({});
 
-    const isAdmin = localStorage.getItem("role") === 'ADMIN';
+    const isAdmin = localStorage.getItem("userType") === 'ADMIN';
 
     const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
     const [selectedDocType, setSelectedDocType] = useState<number | null>(null);
     const [loadingDocTypes, setLoadingDocTypes] = useState(false)
+
+
+    const [createGroupModalOpen, setCreateGroupModalOpen] = useState(false);
+    const [newGroup, setNewGroup] = useState({
+        name: '',
+        maxStudentCount: 20,
+        courseId: Number(id)
+    });
 
     useEffect(() => {
         const fetchCourseData = async () => {
@@ -154,6 +162,39 @@ const CourseManagePage = () => {
 
         fetchCourseData();
     }, [id]);
+
+    const handleCreateGroup = async () => {
+        try {
+            setLoading(prev => ({ ...prev, submit: true }));
+            setError(null);
+
+            const response = await axios.post(
+                `http://localhost:8080/api/groups/create`,
+                newGroup,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`
+                    }
+                }
+            );
+
+            // Обновляем список групп
+            const groupsResponse = await axios.get(`http://localhost:8080/api/groups/${id}`);
+            setGroups(groupsResponse.data);
+
+            setCreateGroupModalOpen(false);
+            setNewGroup({
+                name: '',
+                maxStudentCount: 20,
+                courseId: Number(id)
+            });
+        } catch (err) {
+            setError('Ошибка при создании группы');
+            console.error(err);
+        } finally {
+            setLoading(prev => ({ ...prev, submit: false }));
+        }
+    };
 
     // Загрузка студентов при выборе группы
     useEffect(() => {
@@ -364,33 +405,11 @@ const CourseManagePage = () => {
         }
     };
 
-    const handleAddGroup = async () => {
-        if (!selectedGroup) return;
-
-        try {
-            await axios.post(
-                `http://localhost:8080/api/courses/${id}/groups`,
-                { groupId: selectedGroup },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${user?.token}`
-                    }
-                }
-            );
-
-            const response = await axios.get(`http://localhost:8080/api/courses/${id}/groups`);
-            setGroups(response.data);
-            setSelectedGroup(null);
-        } catch (err) {
-            setError('Ошибка при добавлении группы');
-            console.error(err);
-        }
-    };
 
     const handleRemoveGroup = async (groupId: number) => {
         try {
             await axios.delete(
-                `http://localhost:8080/api/courses/${id}/groups/${groupId}`,
+                `http://localhost:8080/api/groups/${groupId}/delеte`,
                 {
                     headers: {
                         'Authorization': `Bearer ${user?.token}`
@@ -398,7 +417,7 @@ const CourseManagePage = () => {
                 }
             );
 
-            const response = await axios.get(`http://localhost:8080/api/courses/${id}/groups`);
+            const response = await axios.get(`http://localhost:8080/api/groups/${id}`);
             setGroups(response.data);
         } catch (err) {
             setError('Ошибка при удалении группы');
@@ -770,49 +789,29 @@ const CourseManagePage = () => {
                                 </Button>
                             </Stack>
                         ) : isAdmin && (
-                            <Button
-                                variant="contained"
-                                startIcon={<Edit />}
-                                onClick={() => setEditGroupsMode(true)}
-                            >
-                                Управлять группами
-                            </Button>
+                            <>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<Edit/>}
+                                    onClick={() => setEditGroupsMode(true)}
+                                >
+                                    Управлять группами
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<Group/>}
+                                    onClick={() => setCreateGroupModalOpen(true)}
+                                    sx={{ml: 2}}
+                                >
+                                    Создать новую группу
+                                </Button>
+                            </>
                         )}
                     </Box>
 
                     <Stack spacing={3}>
                         <Typography variant="h6">Группы курса</Typography>
                         <Divider />
-
-                        {editGroupsMode && isAdmin && (
-                            <Stack direction="row" spacing={2} alignItems="center">
-                                <Select
-                                    value={selectedGroup || ''}
-                                    onChange={(e) => setSelectedGroup(Number(e.target.value))}
-                                    displayEmpty
-                                    sx={{ minWidth: 200 }}
-                                >
-                                    <MenuItem value="" disabled>
-                                        Выберите группу
-                                    </MenuItem>
-                                    {availableGroups
-                                        .filter(g => !groups.some(cg => cg.id === g.id))
-                                        .map(group => (
-                                            <MenuItem key={group.id} value={group.id}>
-                                                {group.name} ({group.studentCount}/{group.maxStudentCount})
-                                            </MenuItem>
-                                        ))}
-                                </Select>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<Add />}
-                                    onClick={handleAddGroup}
-                                    disabled={!selectedGroup}
-                                >
-                                    Добавить группу
-                                </Button>
-                            </Stack>
-                        )}
 
                         {groups.length === 0 ? (
                             <Typography>Нет назначенных групп</Typography>
@@ -1038,6 +1037,59 @@ const CourseManagePage = () => {
                             </Box>
                         </>
                     )}
+                </Box>
+            </Modal>
+            <Modal open={createGroupModalOpen} onClose={() => setCreateGroupModalOpen(false)}>
+                <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 400,
+                    bgcolor: 'background.paper',
+                    boxShadow: 24,
+                    p: 4,
+                }}>
+                    <Typography variant="h6" mb={2}>
+                        Создать новую группу
+                    </Typography>
+
+                    <Stack spacing={2}>
+                        <TextField
+                            label="Название группы"
+                            value={newGroup.name}
+                            onChange={(e) => setNewGroup({...newGroup, name: e.target.value})}
+                            fullWidth
+                            required
+                        />
+
+                        <TextField
+                            label="Максимальное количество студентов"
+                            type="number"
+                            value={newGroup.maxStudentCount}
+                            onChange={(e) => setNewGroup({...newGroup, maxStudentCount: Number(e.target.value)})}
+                            fullWidth
+                            required
+                            inputProps={{ min: 1 }}
+                        />
+
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                            <Button
+                                variant="outlined"
+                                onClick={() => setCreateGroupModalOpen(false)}
+                                sx={{ mr: 2 }}
+                            >
+                                Отмена
+                            </Button>
+                            <Button
+                                variant="contained"
+                                onClick={handleCreateGroup}
+                                disabled={!newGroup.name || loading.submit}
+                            >
+                                {loading.submit ? <CircularProgress size={24} /> : 'Создать'}
+                            </Button>
+                        </Box>
+                    </Stack>
                 </Box>
             </Modal>
         </Box>

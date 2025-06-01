@@ -26,6 +26,12 @@ public class GroupController {
         return ResponseEntity.ok(groupService.getAllGroupsByCourseId(id));
     }
 
+    @PostMapping("/create")
+    public ResponseEntity<?> createGroup(@RequestBody GroupDto request) {
+        GroupDto group = groupService.createGroup(request);
+        return ResponseEntity.ok(group);
+    }
+
     @DeleteMapping("/{id}/delete")
     public ResponseEntity<?> deleteGroup(@PathVariable Integer id){
         groupService.deleteGroup(id);

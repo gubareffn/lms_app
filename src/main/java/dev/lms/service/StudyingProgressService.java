@@ -72,7 +72,7 @@ public class StudyingProgressService {
     }
 
     private StudyingProgressDto convertToDto(StudyingProgress progress) {
-        StudyingProgressDto dto = new StudyingProgressDto();
+        StudyingProgressDto dto = new StudyingProgressDto(progress);
         dto.setCourseId(progress.getRequest().getCourse().getId());
         dto.setPercent(progress.getPercent());
         return dto;

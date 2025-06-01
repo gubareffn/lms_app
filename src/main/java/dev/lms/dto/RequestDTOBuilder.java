@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 @Data
 @Builder
-public class RequestDTO {
+public class RequestDTOBuilder {
     private Integer id;
     private Integer studentId;
     private Integer courseId;
@@ -26,5 +26,6 @@ public class RequestDTO {
     private String studentFirstName;
     private String studentMiddleName;
     private String studentLastName;
+
 }
 

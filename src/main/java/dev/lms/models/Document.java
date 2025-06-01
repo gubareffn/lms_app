@@ -27,11 +27,11 @@ public class Document {
     @Column(name = "url_address", nullable = false)
     private String urlAddress;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
     private Student student;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doc_type_id")
     private DocumentType type;
 

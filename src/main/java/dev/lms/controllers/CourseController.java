@@ -2,14 +2,11 @@ package dev.lms.controllers;
 
 import dev.lms.dto.CourseDetailsDto;
 import dev.lms.dto.CourseShortDto;
-import dev.lms.dto.RequestDTO;
 import dev.lms.jwt.JwtCore;
 import dev.lms.models.*;
 import dev.lms.repository.CourseCategoryRepository;
 import dev.lms.repository.CourseRepository;
 import dev.lms.repository.CourseStatusRepository;
-import dev.lms.service.CourseCategoryService;
-import dev.lms.service.EducationMaterialService;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +17,6 @@ import dev.lms.service.CourseService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/courses")

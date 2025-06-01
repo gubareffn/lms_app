@@ -40,11 +40,11 @@ public class Course {
     @Column(name = "result_competence", nullable = false, length = 200)
     private String resultCompetence;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_status_id", nullable = false)
     private CourseStatus status;
 

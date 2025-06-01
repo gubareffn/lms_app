@@ -128,6 +128,8 @@ public class StudyingProgressController {
         progress.setStatus(status);
 
         studyingProgressRepository.save(progress);
-        return ResponseEntity.ok(progress);
+        StudyingProgressDto progressDto = new StudyingProgressDto(progress);
+
+        return ResponseEntity.ok(progressDto);
     }
 }

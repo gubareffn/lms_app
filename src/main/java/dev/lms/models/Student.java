@@ -35,22 +35,11 @@ public class Student {
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email;
 
-    public UserDetails toUserDetails() {
-        return new org.springframework.security.core.userdetails.User(
-                this.email,
-                this.password,
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_STUDENT"))
-        );
-    }
-
 //    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
 //    private Passport passport;
 //
 //    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
-//    private Set<Document> documents = new HashSet<>();
-
-    @OneToMany(mappedBy = "student")
-    private Set<Request> requests = new HashSet<>();
+//    private Set<Document> documents = new HashSet<>();\
 
 //    @OneToMany(mappedBy = "student")
 //    private Set<Solution> solutions = new HashSet<>();

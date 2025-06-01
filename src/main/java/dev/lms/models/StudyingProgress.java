@@ -31,11 +31,11 @@ public class StudyingProgress {
     @Column(name = "final_exam_result")
     private Integer finaExamResult;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id", nullable = false)
     private Request request;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "studying_status_id", nullable = false)
     private StudyingStatus status;
 }

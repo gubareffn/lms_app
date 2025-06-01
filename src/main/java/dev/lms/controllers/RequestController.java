@@ -1,14 +1,10 @@
 package dev.lms.controllers;
 
-import dev.lms.dto.CourseShortDto;
-import dev.lms.dto.CreateRequestDTO;
-import dev.lms.dto.RequestDTO;
-import dev.lms.dto.StudentRegistrationDto;
+import dev.lms.dto.*;
 import dev.lms.jwt.JwtCore;
 import dev.lms.models.*;
 import dev.lms.repository.*;
 import dev.lms.service.RequestService;
-import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/requests")
@@ -32,7 +27,7 @@ public class RequestController {
 
     // Получение списка всех заявок
     @GetMapping
-    public ResponseEntity<List<RequestDTO>> getAllRequests() {
+    public ResponseEntity<List<RequestDTOBuilder>> getAllRequests() {
         return ResponseEntity.ok(requestService.getAllRequests());
     }
 
@@ -62,7 +57,7 @@ public class RequestController {
             }
 
             // Создаем заявку
-            RequestDTO createdRequest = requestService.createRequest(dto, studentId.longValue());
+            RequestDto createdRequest = requestService.createRequest(dto, studentId.longValue());
             return ResponseEntity.ok(createdRequest);
 
         } catch (Exception e) {
@@ -117,7 +112,8 @@ public class RequestController {
         updateRequest.setStatus(updateStatus);
 
         requestRepository.save(updateRequest);
-        return ResponseEntity.ok(updateRequest);
+        RequestDto updatedStatus = new RequestDto(updateRequest);
+        return ResponseEntity.ok(updatedStatus);
     }
 
     // Обновление статуса заявки при смене статуса
@@ -136,11 +132,11 @@ public class RequestController {
         updateRequest.setRequestText(comment);
 
         requestRepository.save(updateRequest);
-        return ResponseEntity.ok(updateRequest);
+        RequestDto updatedComment = new RequestDto(updateRequest);
+        return ResponseEntity.ok(updatedComment);
     }
 
-
-//     Удаление заявки
+    //  Удаление заявки
     @DeleteMapping("/{id}/delete")
     public ResponseEntity<?> deleteRequest(@PathVariable Integer id){
         requestService.deleteRequest(id);
@@ -167,7 +163,7 @@ public class RequestController {
             Integer studentId = jwtCore.getUserIdFromToken(token);
 
             // Получаем заявки студента
-            List<RequestDTO> requests = requestService.getRequestsByStudent(studentId);
+            List<RequestDTOBuilder> requests = requestService.getRequestsByStudent(studentId);
             return ResponseEntity.ok(requests);
 
         } catch (Exception e) {

@@ -181,13 +181,13 @@ const ProfilePage = () => {
                         <Typography variant="subtitle1" color="text.secondary" mt={1}>
                             {profile.email}
                         </Typography>
-                        <Chip
-                            label={profile.userType === 'STUDENT' ? 'Студент' :
-                                profile.userType === 'TEACHER' ? 'Преподаватель' : 'Администратор'}
-                            color="primary"
-                            size="small"
-                            sx={{ mt: 1 }}
-                        />
+                        {/*<Chip*/}
+                        {/*    label={profile.userType === 'STUDENT' ? 'Студент' :*/}
+                        {/*        profile.userType === 'TEACHER' ? 'Преподаватель' : 'Администратор'}*/}
+                        {/*    color="primary"*/}
+                        {/*    size="small"*/}
+                        {/*    sx={{ mt: 1 }}*/}
+                        {/*/>*/}
                     </Box>
                 </Box>
 

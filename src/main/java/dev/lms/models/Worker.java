@@ -36,10 +36,7 @@ public class Worker {
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email;
 
-//    @OneToMany(mappedBy = "worker")
-//    private Set<Request> requests = new HashSet<>();
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
     private WorkerRole role;
 
@@ -57,6 +54,6 @@ public class Worker {
             joinColumns = @JoinColumn(name = "worker_id"),
             inverseJoinColumns = @JoinColumn(name = "document_id")
     )
-    private Set<Document> worker = new HashSet<Document>();
+    private Set<Document> document = new HashSet<Document>();
 }
 

@@ -20,4 +20,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     Optional<Course> findByIdWithDetails(@Param("id") Integer id);
 
     List<Course> findAllByWorkerId(Integer id);
+
+    Course findById(Integer id);
 }

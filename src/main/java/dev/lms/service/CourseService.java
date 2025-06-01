@@ -2,9 +2,7 @@ package dev.lms.service;
 
 import dev.lms.dto.CourseDetailsDto;
 import dev.lms.dto.CourseShortDto;
-import dev.lms.dto.RequestDTO;
 import dev.lms.models.Course;
-import dev.lms.models.EducationMaterial;
 import dev.lms.models.Worker;
 import dev.lms.repository.CourseCategoryRepository;
 import dev.lms.repository.CourseRepository;
@@ -15,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

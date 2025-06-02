@@ -37,7 +37,10 @@ public class Student {
 
 //    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
 //    private Passport passport;
-//
+
+//    @OneToOne(mappedBy = "passport_id", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private Passport passport;
+
 //    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
 //    private Set<Document> documents = new HashSet<>();\
 

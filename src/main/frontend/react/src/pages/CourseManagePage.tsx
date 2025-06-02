@@ -114,7 +114,6 @@ const CourseManagePage = () => {
     const [selectedDocType, setSelectedDocType] = useState<number | null>(null);
     const [loadingDocTypes, setLoadingDocTypes] = useState(false)
 
-
     const [createGroupModalOpen, setCreateGroupModalOpen] = useState(false);
     const [newGroup, setNewGroup] = useState({
         name: '',
@@ -239,7 +238,7 @@ const CourseManagePage = () => {
         }
     };
 
-// Модифицируем функцию загрузки файла
+// Загрузка файла
     const handleFileUpload = async () => {
         if (!file || !selectedStudentId || !selectedDocType) {
             setError('Выберите файл и тип документа');

@@ -1,22 +1,20 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    Typography,
-    Button,
-    Paper,
-    CircularProgress,
     Card,
     CardContent,
-    CardActions,
+    Typography,
+    Container,
+    CircularProgress,
     Chip,
-    Alert, Grid
+    Button,
+    TextField,
+    MenuItem,
+    InputAdornment,
+    Divider,
+    useTheme
 } from '@mui/material';
-import { Add, Book, Group, Assignment } from '@mui/icons-material';
+import { Add, Search, FilterList, School } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
 
@@ -25,43 +23,81 @@ interface Course {
     name: string;
     studyDirection: string;
     status: string;
-    studentCount: number;
+    startDate: string;
+    hoursCount: number;
+    description?: string;
 }
 
 const TeachingPage = () => {
-    const [activeTab, setActiveTab] = useState('my-courses');
     const [courses, setCourses] = useState<Course[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filter, setFilter] = useState({
+        direction: '',
+        status: ''
+    });
     const { user } = useAuth();
     const navigate = useNavigate();
+    const theme = useTheme();
+
+    const studyDirections = Array.from(new Set(courses.map(course => course.studyDirection)));
+    const statusOptions = Array.from(new Set(courses.map(course => course.status)));
 
     useEffect(() => {
-        if (activeTab === 'my-courses') {
-            fetchTeacherCourses();
-        }
-    }, [activeTab]);
+        const fetchCourses = async () => {
+            try {
+                const response = await fetch('http://localhost:8080/api/courses/my', {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`
+                    }
+                });
+                const data = await response.json();
+                setCourses(data);
+                setFilteredCourses(data);
+            } catch (err) {
+                setError('Не удалось загрузить список курсов');
+                console.error('Error:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const fetchTeacherCourses = async () => {
-        try {
-            setLoading(true);
-            setError(null);
+        fetchCourses();
+    }, [user?.token]);
 
-            const response = await fetch('http://localhost:8080/api/courses/my', {
-                headers: {
-                    'Authorization': `Bearer ${user?.token}`
-                }
-            });
+    useEffect(() => {
+        let result = courses.filter(course => {
+            const matchesSearch = course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                course.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-            if (!response.ok) throw new Error('Ошибка загрузки курсов');
+            const matchesDirection = filter.direction ? course.studyDirection === filter.direction : true;
+            const matchesStatus = filter.status ? course.status === filter.status : true;
 
-            const data = await response.json();
-            setCourses(data);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
-        } finally {
-            setLoading(false);
-        }
+            return matchesSearch && matchesDirection && matchesStatus;
+        });
+
+        setFilteredCourses(result);
+    }, [searchTerm, filter, courses]);
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFilter({
+            ...filter,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const clearFilters = () => {
+        setSearchTerm('');
+        setFilter({
+            direction: '',
+            status: ''
+        });
     };
 
     const handleAddCourse = () => {
@@ -72,149 +108,257 @@ const TeachingPage = () => {
         navigate(`/courses/${courseId}/manage`);
     };
 
+    if (loading) {
+        return (
+            <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+                <CircularProgress size={60} />
+            </Container>
+        );
+    }
+
+    if (error) {
+        return (
+            <Container sx={{ mt: 4, textAlign: 'center' }}>
+                <Typography color="error" variant="h5">{error}</Typography>
+                <Button variant="outlined" sx={{ mt: 2 }} onClick={() => window.location.reload()}>
+                    Попробовать снова
+                </Button>
+            </Container>
+        );
+    }
+
     return (
-        <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
-            {/* Боковое меню */}
-            <Paper elevation={3} sx={{
-                width: 300,
-                p: 2,
-                borderRadius: 0,
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                    Мои курсы
+                </Typography>
+                <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={handleAddCourse}
+                    sx={{
+                        borderRadius: '8px',
+                        px: 3,
+                        fontWeight: 'medium'
+                    }}
+                >
+                    Добавить курс
+                </Button>
+            </Box>
 
-                <List>
-                    <ListItem disablePadding>
-                        <ListItemButton
-                            selected={activeTab === 'my-courses'}
-                            onClick={() => setActiveTab('my-courses')}
+            <Box sx={{ mb: 4 }}>
+                <TextField
+                    fullWidth
+                    variant="outlined"
+                    placeholder="Поиск по моим курсам..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Search />
+                            </InputAdornment>
+                        ),
+                    }}
+                    sx={{ mb: 3 }}
+                />
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                    <FilterList color="action" />
+                    <TextField
+                        select
+                        label="Направление"
+                        name="direction"
+                        value={filter.direction}
+                        onChange={handleFilterChange}
+                        sx={{ minWidth: 200 }}
+                        size="small"
+                    >
+                        <MenuItem value="">Все направления</MenuItem>
+                        {studyDirections.map((direction) => (
+                            <MenuItem key={direction} value={direction}>
+                                {direction}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+
+                    <TextField
+                        select
+                        label="Статус"
+                        name="status"
+                        value={filter.status}
+                        onChange={handleFilterChange}
+                        sx={{ minWidth: 200 }}
+                        size="small"
+                    >
+                        <MenuItem value="">Все статусы</MenuItem>
+                        {statusOptions.map((status) => (
+                            <MenuItem key={status} value={status}>
+                                {status}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+
+                    <Button
+                        variant="outlined"
+                        onClick={clearFilters}
+                        sx={{ ml: 'auto' }}
+                    >
+                        Сбросить
+                    </Button>
+                </Box>
+
+                <Divider sx={{ mb: 3 }} />
+
+                <Typography variant="subtitle1" color="text.secondary">
+                    Найдено курсов: {filteredCourses.length}
+                </Typography>
+            </Box>
+
+            {filteredCourses.length > 0 ? (
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                            xs: '1fr',
+                            sm: 'repeat(2, 1fr)',
+                            md: 'repeat(3, 1fr)',
+                            lg: 'repeat(4, 1fr)'
+                        },
+                        gap: 3
+                    }}
+                >
+                    {filteredCourses.map((course) => (
+                        <Card
+                            key={course.id}
+                            onClick={() => handleCourseClick(course.id)}
+                            sx={{
+                                height: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)',
+                                    boxShadow: 4,
+                                    cursor: 'pointer'
+                                },
+                                borderLeft: `4px solid ${
+                                    course.status === 'Идёт набор' ? theme.palette.success.main :
+                                        course.status === 'Завершен' ? theme.palette.warning.main :
+                                            theme.palette.error.main
+                                }`
+                            }}
                         >
-                            <ListItemIcon>
-                                <Book />
-                            </ListItemIcon>
-                            <ListItemText primary="Мои курсы" />
-                        </ListItemButton>
-                    </ListItem>
-
-                    <ListItem disablePadding>
-                        <ListItemButton
-                            selected={activeTab === 'students'}
-                            onClick={() => setActiveTab('students')}
-                        >
-                            <ListItemIcon>
-                                <Group />
-                            </ListItemIcon>
-                            <ListItemText primary="Студенты" />
-                        </ListItemButton>
-                    </ListItem>
-
-                    <ListItem disablePadding>
-                        <ListItemButton
-                            selected={activeTab === 'assignments'}
-                            onClick={() => setActiveTab('assignments')}
-                        >
-                            <ListItemIcon>
-                                <Assignment />
-                            </ListItemIcon>
-                            <ListItemText primary="Задания" />
-                        </ListItemButton>
-                    </ListItem>
-                </List>
-            </Paper>
-
-            {/* Основное содержимое */}
-            <Box sx={{ flex: 1, p: 4 }}>
-                {activeTab === 'my-courses' && (
-                    <>
-                        <Box sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            mb: 4
-                        }}>
-                            <Typography variant="h4">Мои курсы</Typography>
-                            <Button
-                                variant="contained"
-                                startIcon={<Add />}
-                                onClick={handleAddCourse}
-                            >
-                                Добавить курс
-                            </Button>
-                        </Box>
-
-                        {loading && <CircularProgress />}
-
-                        {error && (
-                            <Alert severity="error" sx={{ mb: 3 }}>
-                                {error}
-                            </Alert>
-                        )}
-
-                        {!loading && !error && courses.length === 0 && (
-                            <Paper sx={{ p: 4, textAlign: 'center' }}>
-                                <Typography variant="h6" gutterBottom>
-                                    У вас пока нет курсов
+                            <CardContent sx={{ flexGrow: 1 }}>
+                                <Typography gutterBottom variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+                                    {course.name}
                                 </Typography>
-                                <Typography sx={{ mb: 3 }}>
-                                    Создайте свой первый курс, нажав кнопку "Добавить курс"
+
+                                <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                                    <Chip
+                                        label={course.studyDirection}
+                                        size="small"
+                                        color="primary"
+                                        sx={{ fontWeight: 500 }}
+                                    />
+                                    <Chip
+                                        label={`${course.hoursCount} ч.`}
+                                        size="small"
+                                        variant="outlined"
+                                    />
+                                    <Chip
+                                        label={course.status}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor:
+                                                course.status === 'Идёт набор' ? theme.palette.success.light :
+                                                    course.status === 'Завершен' ? theme.palette.warning.light :
+                                                        theme.palette.error.light,
+                                            color:
+                                                course.status === 'Идёт набор' ? theme.palette.success.dark :
+                                                    course.status === 'Завершен' ? theme.palette.warning.dark :
+                                                        theme.palette.error.dark,
+                                            fontWeight: 500
+                                        }}
+                                    />
+                                </Box>
+
+                                {course.description && (
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{
+                                            mb: 2,
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 3,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden'
+                                        }}
+                                    >
+                                        {course.description}
+                                    </Typography>
+                                )}
+                            </CardContent>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, pb: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    Старт: {new Date(course.startDate).toLocaleDateString()}
                                 </Typography>
+                            </Box>
+
+                            <CardContent sx={{ pt: 0 }}>
                                 <Button
                                     variant="contained"
-                                    startIcon={<Add />}
-                                    onClick={handleAddCourse}
+                                    fullWidth
+                                    sx={{
+                                        backgroundColor: theme.palette.primary.main,
+                                        '&:hover': {
+                                            backgroundColor: theme.palette.primary.dark
+                                        }
+                                    }}
                                 >
-                                    Создать курс
+                                    Управление
                                 </Button>
-                            </Paper>
-                        )}
-
-                        <Grid container spacing={3}>
-                            {courses.map((course) => (
-                                <Grid key={course.id}>
-                                    <Card
-                                        sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-                                        onClick={() => handleCourseClick(course.id)}
-                                    >
-                                        <CardContent sx={{ flexGrow: 1 }}>
-                                            <Typography variant="h5" gutterBottom>
-                                                {course.name}
-                                            </Typography>
-                                            <Chip
-                                                label={course.studyDirection}
-                                                color="primary"
-                                                size="small"
-                                                sx={{ mb: 2 }}
-                                            />
-                                            <Typography variant="body2" color="text.secondary">
-                                                Статус: {course.status}
-                                            </Typography>
-                                        </CardContent>
-                                        <CardActions sx={{ justifyContent: 'space-between', p: 2 }}>
-                                            <Typography variant="body2">
-                                                Студентов: {course.studentCount}
-                                            </Typography>
-                                            <Button size="small">Управление</Button>
-                                        </CardActions>
-                                    </Card>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </>
-                )}
-
-                {activeTab === 'students' && (
-                    <Typography variant="h4" sx={{ mb: 3 }}>
-                        Управление студентами
+                            </CardContent>
+                        </Card>
+                    ))}
+                </Box>
+            ) : (
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: '300px',
+                    textAlign: 'center',
+                    p: 4
+                }}>
+                    <School sx={{
+                        fontSize: 60,
+                        color: theme.palette.grey[400],
+                        mb: 2
+                    }} />
+                    <Typography variant="h5" sx={{ mb: 2 }}>
+                        {searchTerm || filter.direction || filter.status
+                            ? "Курсы не найдены"
+                            : "У вас пока нет курсов"}
                     </Typography>
-                )}
-
-                {activeTab === 'assignments' && (
-                    <Typography variant="h4" sx={{ mb: 3 }}>
-                        Задания и материалы
+                    <Typography variant="body1" sx={{ mb: 3 }}>
+                        {searchTerm || filter.direction || filter.status
+                            ? "Попробуйте изменить параметры поиска"
+                            : "Создайте свой первый курс"}
                     </Typography>
-                )}
-            </Box>
-        </Box>
+                    <Button
+                        variant="contained"
+                        onClick={searchTerm || filter.direction || filter.status ? clearFilters : handleAddCourse}
+                        sx={{ px: 4 }}
+                    >
+                        {searchTerm || filter.direction || filter.status ? "Сбросить фильтры" : "Создать курс"}
+                    </Button>
+                </Box>
+            )}
+        </Container>
     );
 };
 

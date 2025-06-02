@@ -1,5 +1,6 @@
 package dev.lms.service;
 
+import dev.lms.dto.CourseWithProgressDto;
 import dev.lms.dto.StudentRegistrationDto;
 import dev.lms.dto.StudentWithProgressDto;
 import dev.lms.dto.StudyingProgressDto;
@@ -36,6 +37,18 @@ public class StudyingProgressService {
 
         return convertToDto(progress);
     }
+
+    public List <CourseWithProgressDto> getCoursesWithProgress(Integer studentId) {
+//        Request request = requestRepository.findRequestByStudentId(studentId)
+//                .orElseThrow(() -> new EntityNotFoundException("Request not found"));
+//
+//        Integer requestId = request.getId();
+
+        return progressRepository.findAllCoursesWithProgress(studentId).stream()
+                .map(CourseWithProgressDto::new)
+                .collect(Collectors.toList());
+    }
+
 
     private StudyingProgress createNewProgress(Request request) {
         // Получаем статус "В процессе" (id = 1)

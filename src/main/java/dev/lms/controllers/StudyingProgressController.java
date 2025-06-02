@@ -1,10 +1,7 @@
 package dev.lms.controllers;
 
-import dev.lms.dto.EducationMaterialDto;
-import dev.lms.dto.StudentRegistrationDto;
-import dev.lms.dto.StudentWithProgressDto;
+import dev.lms.dto.*;
 import dev.lms.jwt.JwtCore;
-import dev.lms.dto.StudyingProgressDto;
 import dev.lms.models.EducationMaterial;
 import dev.lms.models.Group;
 import dev.lms.models.StudyingProgress;
@@ -51,12 +48,7 @@ public class StudyingProgressController {
         }
 
         // Извлекаем ID студента из токена
-        Integer studentId = (Integer) Jwts.parser()
-                .setSigningKey(jwtCore.getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("id");
+        Integer studentId = jwtCore.getUserIdFromToken(token);
 
         if (studentId == null) {
             return ResponseEntity.status(403).body("Student ID not found in token");
@@ -85,12 +77,7 @@ public class StudyingProgressController {
         }
 
         // Извлекаем ID студента из токена
-        Integer studentId = (Integer) Jwts.parser()
-                .setSigningKey(jwtCore.getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("id");
+        Integer studentId = jwtCore.getUserIdFromToken(token);
 
         if (studentId == null) {
             return ResponseEntity.status(403).body("Student ID not found in token");
@@ -100,7 +87,7 @@ public class StudyingProgressController {
         return ResponseEntity.ok().build();
     }
 
-    //Получение списка студентов по группе
+    //Получение списка студентов по группе с прогрессом
     @GetMapping("/groups/{selectedGroup}/students")
     public ResponseEntity<?> getStudentsByGroup(HttpServletRequest request, @PathVariable Integer selectedGroup) {
         Group group = groupRepository.findById(selectedGroup).orElse(null);
@@ -111,6 +98,34 @@ public class StudyingProgressController {
         List<StudentWithProgressDto> students = progressService.getAllStudentsWithProgressByGroup(selectedGroup);
 
         return ResponseEntity.ok(students);
+    }
+
+    //Получение списка курсов с прогрессом
+    @GetMapping("/my-courses")
+    public ResponseEntity<?> getCoursesWithProgress(HttpServletRequest request) {
+        // Получаем токен из заголовка Authorization
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body("Missing or invalid Authorization header");
+        }
+
+        String token = authHeader.substring(7);
+
+        // Проверяем валидность токена
+        if (!jwtCore.validateToken(token)) {
+            return  ResponseEntity.status(401).body("Invalid token");
+        }
+
+        // Извлекаем ID студента из токена
+        Integer studentId = jwtCore.getUserIdFromToken(token);
+
+        if (studentId == null) {
+            return ResponseEntity.status(403).body("Student ID not found in token");
+        }
+
+        List<CourseWithProgressDto> courses = progressService.getCoursesWithProgress(studentId);
+
+        return ResponseEntity.ok(courses);
     }
 
     //Обновление статуса обучения
@@ -132,4 +147,5 @@ public class StudyingProgressController {
 
         return ResponseEntity.ok(progressDto);
     }
+
 }

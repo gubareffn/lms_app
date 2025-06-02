@@ -1,43 +1,44 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Card,
     CardContent,
-    CardActions,
     Typography,
     Button,
     CircularProgress,
     Alert,
-    Grid,
-    Chip
+    Chip,
+    useTheme,
+    Divider,
+    CardActions, Paper, LinearProgress
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import {useAuth} from "../components/AuthContext";
-
+import { useAuth } from "../components/AuthContext";
+import { School } from '@mui/icons-material';
 
 interface Course {
     id: number;
     name: string;
     studyDirection: string;
-    startDate: string;
+    courseStartDate: string;
     hoursCount: number;
     status: string;
     description?: string;
-    progress?: number;
-
+    percent: number;
+    statusName: string;
 }
-
 
 const ActiveCourses = () => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const {user} = useAuth();
+    const { user } = useAuth();
+    const theme = useTheme();
 
     useEffect(() => {
         const fetchCourses = async () => {
             try {
-                const response = await fetch('http://localhost:8080/api/requests/my-courses', {
+                const response = await fetch('http://localhost:8080/api/progress/my-courses', {
                     headers: {
                         'Authorization': `Bearer ${user?.token}`
                     }
@@ -59,53 +60,161 @@ const ActiveCourses = () => {
         fetchCourses();
     }, [user?.token]);
 
-    if (loading) return <CircularProgress />;
-    if (error) return <Alert severity="error">{error}</Alert>;
-    if (courses.length === 0) return <Alert severity="info">У вас нет активных курсов</Alert>;
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <CircularProgress size={60} />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+            </Alert>
+        );
+    }
+
+    if (courses.length === 0) {
+        return (
+            <Paper sx={{
+                p: 4,
+                textAlign: 'center',
+                borderRadius: 3,
+                backgroundColor: theme.palette.background.paper,
+                maxWidth: 600,
+                mx: 'auto'
+            }}>
+                <School sx={{
+                    fontSize: 60,
+                    color: theme.palette.grey[400],
+                    mb: 2
+                }} />
+                <Typography variant="h6" gutterBottom>
+                    У вас нет активных курсов
+                </Typography>
+                <Typography color="text.secondary">
+                    Запишитесь на курс, чтобы начать обучение
+                </Typography>
+            </Paper>
+        );
+    }
 
     return (
-        <Grid container spacing={3}>
+        <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(3, 1fr)',
+                lg: 'repeat(4, 1fr)',
+                xl: 'repeat(5, 1fr)'
+            },
+            gap: 3,
+            width: '100%'
+        }}>
             {courses.map((course) => (
-                <Grid key={course.id}>
-                    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                        <CardContent sx={{ flexGrow: 1 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                <Typography variant="h5" component="h2">
-                                    {course.name}
-                                </Typography>
-                                <Chip
-                                    label={course.status === 'ACTIVE' ? 'Активен' : 'Завершен'}
-                                    color={course.status === 'ACTIVE' ? 'success' : 'default'}
-                                    size="small"
-                                />
-                            </Box>
-
-                            {/*<Typography color="textSecondary" gutterBottom>*/}
-                            {/*    {new Date(course.startDate).toLocaleDateString()} - {new Date(course. endDate).toLocaleDateString()}*/}
-                            {/*</Typography>*/}
-
-                            <Typography variant="body2" paragraph sx={{ mt: 1 }}>
-                                {course.description}
+                <Card
+                    key={course.id}
+                    sx={{
+                        borderRadius: 3,
+                        boxShadow: theme.shadows[1],
+                        transition: 'transform 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%',
+                        '&:hover': {
+                            transform: 'translateY(-5px)',
+                            boxShadow: theme.shadows[4],
+                            cursor: 'pointer'
+                        },
+                        borderTop: `4px solid ${
+                            course.statusName === 'Завершено'
+                                ? theme.palette.success.main
+                                : theme.palette.grey[500]
+                        }`
+                    }}
+                >
+                    <CardContent sx={{ flexGrow: 1 }}>
+                        <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            mb: 2
+                        }}>
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    fontWeight: 600,
+                                    flex: 1,
+                                    mr: 1
+                                }}
+                            >
+                                {course.name}
                             </Typography>
 
-                        </CardContent>
+                        </Box>
 
-                        <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
-                            <Button
-                                component={Link}
-                                to={`/courses/materials/${course.id}`}
-                                variant="contained"
-                                size="small"
-                                // disabled={course.status !== 'ACTIVE'}
-                            >
-                                Продолжить
-                                {/*{course.progress > 0 ? 'Продолжить' : 'Начать'}*/}
-                            </Button>
-                        </CardActions>
-                    </Card>
-                </Grid>
+                        <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            mt: 'auto'
+                        }}>
+                            <Typography variant="caption" color="text.secondary">
+                                {new Date(course.courseStartDate).toLocaleDateString()}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                часов: {course.hoursCount}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{width: '100%', mr: 1}}>
+                            <LinearProgress
+                                variant="determinate"
+                                value={course.percent}
+                            />
+                        </Box>
+                        <Typography variant="body2">
+                            Прогресс: {Math.round(course.percent)} %
+                        </Typography>
+                    </CardContent>
+
+                    <Divider sx={{ mx: 2 }} />
+
+                    <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+                        <Button
+                            component={course.percent === 100 ? 'div' : Link}
+                            to={`/courses/materials/${course.id}`}
+                            variant="contained"
+                            size="small"
+                            disabled={course.percent === 100}
+                            sx={{
+                                borderRadius: '8px',
+                                px: 2,
+                                textTransform: 'none',
+                                fontWeight: 'medium',
+                                backgroundColor: course.percent === 100
+                                    ? theme.palette.grey[300]
+                                    : theme.palette.primary.main,
+                                color: course.percent === 100
+                                    ? theme.palette.text.secondary
+                                    : theme.palette.primary.contrastText,
+                                '&:hover': {
+                                    backgroundColor: course.percent === 100
+                                        ? theme.palette.grey[300]
+                                        : theme.palette.primary.dark
+                                }
+                            }}
+                        >
+                            {course.percent === 100 ? 'Завершено' :
+                                course.percent && course.percent > 0 ? 'Продолжить' : 'Начать'}
+                        </Button>
+                    </CardActions>
+                </Card>
             ))}
-        </Grid>
+        </Box>
     );
 };
 

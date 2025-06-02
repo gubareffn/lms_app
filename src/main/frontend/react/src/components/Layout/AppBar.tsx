@@ -31,7 +31,6 @@ export default function NavigationBar() {
         if (!token) return null;
 
         try {
-            // JWT состоит из 3 частей, разделенных точками: header.payload.signature
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const jsonPayload = decodeURIComponent(
@@ -114,7 +113,7 @@ export default function NavigationBar() {
                         }
 
                         {isAuthenticated && (
-                                localStorage.getItem("userType") === "TEACHER" && (
+                            (localStorage.getItem("userType") === "TEACHER") && (
                                     <Button
                                         color="inherit"
                                         component={Link}
@@ -125,6 +124,20 @@ export default function NavigationBar() {
                                     </Button>
                                 )
                             )
+                        }
+
+                        {isAuthenticated && (
+                            (localStorage.getItem("userType") === "ADMIN") && (
+                                <Button
+                                    color="inherit"
+                                    component={Link}
+                                    to="/teaching"
+                                    sx={{textTransform: 'none'}}
+                                >
+                                    Преподавание
+                                </Button>
+                            )
+                        )
                         }
 
                         {isAuthenticated && (

@@ -96,6 +96,24 @@ const AdminPage = () => {
     const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
     const [availableRoles, setAvailableRoles] = useState<string[]>(['Администратор', 'Преподаватель']);
 
+    const [addStudentDialogOpen, setAddStudentDialogOpen] = useState(false);
+    const [addWorkerDialogOpen, setAddWorkerDialogOpen] = useState(false);
+    const [newStudent, setNewStudent] = useState<Omit<Student, 'id'>>({
+        lastName: '',
+        firstName: '',
+        middleName: '',
+        email: '',
+        password: ''
+    });
+    const [newWorker, setNewWorker] = useState<Omit<Worker, 'id'>>({
+        lastName: '',
+        firstName: '',
+        middleName: '',
+        email: '',
+        role: 'Преподаватель',
+        password: ''
+    });
+
     useEffect(() => {
         if (activeTab === 'all-requests') {
             fetchData();
@@ -380,6 +398,52 @@ const AdminPage = () => {
         }
     };
 
+    // Добавление нового студента
+    const handleAddStudent = async () => {
+        try {
+            const response = await axios.post(
+                'http://localhost:8080/api/students/create',
+                newStudent,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            setStudents([...students, response.data]);
+            setAddStudentDialogOpen(false);
+            setNewStudent({ lastName: '', firstName: '', middleName: '', email: '', password: '' });
+        } catch (err) {
+            setError('Ошибка при добавлении студента');
+            console.error(err);
+        }
+    };
+
+    // Добавление нового работника
+    const handleAddWorker = async () => {
+        try {
+            const response = await axios.post(
+                'http://localhost:8080/api/workers/create',
+                newWorker,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            setEmployees([...employees, response.data]);
+            setAddWorkerDialogOpen(false);
+            setNewWorker({ lastName: '', firstName: '', middleName: '', email: '', role: 'Преподаватель', password: '' });
+        } catch (err) {
+            setError('Ошибка при добавлении работника');
+            console.error(err);
+        }
+    };
+
     if (loading.requests || loading.statuses || loading.groups) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -457,7 +521,7 @@ const AdminPage = () => {
                             <Table>
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell>ID</TableCell>
+                                        {/*<TableCell>ID</TableCell>*/}
                                         <TableCell>Студент</TableCell>
                                         <TableCell>Курс</TableCell>
                                         <TableCell>Дата создания</TableCell>
@@ -475,7 +539,7 @@ const AdminPage = () => {
 
                                         return (
                                             <TableRow key={request.id}>
-                                                <TableCell>{request.id}</TableCell>
+                                                {/*<TableCell>{request.id}</TableCell>*/}
                                                 <TableCell>
                                                     <Link
                                                         component="button"
@@ -643,6 +707,24 @@ const AdminPage = () => {
                             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
                                 {error}
                             </Alert>
+                        )}
+
+                        {usersTab === 'students' ? (
+                            <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                onClick={() => setAddStudentDialogOpen(true)}
+                            >
+                                Добавить студента
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                onClick={() => setAddWorkerDialogOpen(true)}
+                            >
+                                Добавить работника
+                            </Button>
                         )}
 
                         {usersTab === 'students' ? (
@@ -822,6 +904,140 @@ const AdminPage = () => {
                     </DialogActions>
                 </Dialog>
 
+                {/* Диалог добавления студента */}
+                <Dialog
+                    open={addStudentDialogOpen}
+                    onClose={() => setAddStudentDialogOpen(false)}
+                    fullWidth
+                    maxWidth="sm"
+                >
+                    <DialogTitle>Добавить нового студента</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            margin="dense"
+                            label="Фамилия"
+                            fullWidth
+                            value={newStudent.lastName}
+                            onChange={(e) => setNewStudent({...newStudent, lastName: e.target.value})}
+                            sx={{ mt: 2 }}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Имя"
+                            fullWidth
+                            value={newStudent.firstName}
+                            onChange={(e) => setNewStudent({...newStudent, firstName: e.target.value})}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Отчество"
+                            fullWidth
+                            value={newStudent.middleName}
+                            onChange={(e) => setNewStudent({...newStudent, middleName: e.target.value})}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Email"
+                            fullWidth
+                            type="email"
+                            value={newStudent.email}
+                            onChange={(e) => setNewStudent({...newStudent, email: e.target.value})}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Пароль"
+                            fullWidth
+                            type="password"
+                            value={newStudent.password}
+                            onChange={(e) => setNewStudent({...newStudent, password: e.target.value})}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setAddStudentDialogOpen(false)}>Отмена</Button>
+                        <Button
+                            onClick={handleAddStudent}
+                            variant="contained"
+                            color="primary"
+                            disabled={!newStudent.lastName || !newStudent.firstName || !newStudent.email || !newStudent.password}
+                        >
+                            Добавить
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+
+                {/* Диалог добавления работника */}
+                <Dialog
+                    open={addWorkerDialogOpen}
+                    onClose={() => setAddWorkerDialogOpen(false)}
+                    fullWidth
+                    maxWidth="sm"
+                >
+                    <DialogTitle>Добавить нового работника</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            margin="dense"
+                            label="Фамилия"
+                            fullWidth
+                            value={newWorker.lastName}
+                            onChange={(e) => setNewWorker({...newWorker, lastName: e.target.value})}
+                            sx={{ mt: 2 }}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Имя"
+                            fullWidth
+                            value={newWorker.firstName}
+                            onChange={(e) => setNewWorker({...newWorker, firstName: e.target.value})}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Отчество"
+                            fullWidth
+                            value={newWorker.middleName}
+                            onChange={(e) => setNewWorker({...newWorker, middleName: e.target.value})}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Email"
+                            fullWidth
+                            type="email"
+                            value={newWorker.email}
+                            onChange={(e) => setNewWorker({...newWorker, email: e.target.value})}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Пароль"
+                            fullWidth
+                            type="password"
+                            value={newWorker.password}
+                            onChange={(e) => setNewWorker({...newWorker, password: e.target.value})}
+                        />
+                        <Select
+                            value={newWorker.role}
+                            onChange={(e) => setNewWorker({...newWorker, role: e.target.value})}
+                            fullWidth
+                            sx={{ mt: 2 }}
+                        >
+                            {availableRoles.map(role => (
+                                <MenuItem key={role} value={role}>
+                                    {role}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setAddWorkerDialogOpen(false)}>Отмена</Button>
+                        <Button
+                            onClick={handleAddWorker}
+                            variant="contained"
+                            color="primary"
+                            disabled={!newWorker.lastName || !newWorker.firstName || !newWorker.email || !newWorker.password}
+                        >
+                            Добавить
+                        </Button>
+                    </DialogActions>
+                </Dialog>
                 {/* Worker Edit Dialog */}
                 <Dialog
                     open={editWorkerDialogOpen}

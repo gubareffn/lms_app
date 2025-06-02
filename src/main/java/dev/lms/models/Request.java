@@ -48,4 +48,7 @@ public class Request {
     @JoinColumn(name = "request_status_id", nullable = false)
     private RequestStatus status;
 
+
+
+
 }

@@ -72,11 +72,28 @@ public class StudentController {
     }
 
     // Добавление студента
-//    @PostMapping
-//    public Student addStudent(@RequestBody Student student) {
-//        return studentService.createStudent(student);
-//    }
-//
+    @Transactional
+    @PostMapping("/create")
+    public ResponseEntity<?> createStudent(@RequestBody Map<String, String> requestBody) {
+        Student findStudent = studentRepository.findByEmail(requestBody.get("email")).orElse(null);
+        if (findStudent != null) {
+            return ResponseEntity.status(404).body("Student already exists");
+        }
+        Student createStudent = new Student();
+        createStudent.setFirstName(requestBody.get("firstName"));
+        createStudent.setLastName(requestBody.get("lastName"));
+        createStudent.setMiddleName(requestBody.get("middleName"));
+        createStudent.setEmail(requestBody.get("email"));
+        createStudent.setPassword(passwordEncoder.encode(requestBody.get("password")));
+        studentService.saveStudent(createStudent);
+        return ResponseEntity.ok(createStudent);
+    }
+
+    @DeleteMapping("/{studentId}/delete")
+    public ResponseEntity<?> deleteStudent(@PathVariable Long studentId){
+        studentService.deleteStudent(studentId);
+        return  ResponseEntity.ok("Student deleted");
+    }
 
     // Обновление студента
     @Transactional
@@ -95,11 +112,5 @@ public class StudentController {
         updateStudent.setPassword(passwordEncoder.encode(requestBody.get("password")));
         studentService.saveStudent(updateStudent);
         return ResponseEntity.ok(updateStudent);
-    }
-
-    @DeleteMapping("/{studentId}/delete")
-    public ResponseEntity<?> deleteGroup(@PathVariable Long studentId){
-        studentService.deleteStudent(studentId);
-        return  ResponseEntity.ok("Student deleted");
     }
 }

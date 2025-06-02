@@ -43,6 +43,30 @@ public class WorkerController {
         return workerService.getAllAdmins();
     }
 
+    // Добавление работника
+    @Transactional
+    @PostMapping("/create")
+    public ResponseEntity<?> updateWorker(@RequestBody Map<String, String> requestBody) {
+        Worker findWorker = workerRepository.findByEmail(requestBody.get("email")).orElse(null);
+        if (findWorker != null) {
+            return ResponseEntity.status(404).body("Worker already exists");
+        }
+
+        Worker createWorker = new Worker();
+
+        String roleName = requestBody.get("role");
+        WorkerRole role = workerRoleRepository.findByName(roleName);
+
+        createWorker.setFirstName(requestBody.get("firstName"));
+        createWorker.setLastName(requestBody.get("lastName"));
+        createWorker.setMiddleName(requestBody.get("middleName"));
+        createWorker.setEmail(requestBody.get("email"));
+        createWorker.setPassword(passwordEncoder.encode(requestBody.get("password")));
+        createWorker.setRole(role);
+        workerService.saveWorker(createWorker);
+        return ResponseEntity.ok(createWorker);
+    }
+
     // Обновление работника
     @Transactional
     @PutMapping("/{workerId}/update")

@@ -1,5 +1,15 @@
-import { useEffect, useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Alert } from '@mui/material';
+import {useEffect, useState} from 'react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    CircularProgress,
+    Alert
+} from '@mui/material';
 import {useAuth} from "../components/AuthContext";
 // import { RequestDTO } from '../../types/dto'; // Тип для данных заявки
 
@@ -46,7 +56,7 @@ const StudentRequestList = () => {
         fetchRequests();
     }, [user?.token]);
 
-    if (loading) return <CircularProgress />;
+    if (loading) return <CircularProgress/>;
     if (error) return <Alert severity="error">{error}</Alert>;
 
     return (
@@ -55,24 +65,27 @@ const StudentRequestList = () => {
                 <TableHead>
                     <TableRow>
                         <TableCell>ID</TableCell>
-            <TableCell>Курс</TableCell>
-            <TableCell>Статус</TableCell>
-            <TableCell>Дата подачи</TableCell>
-    </TableRow>
-    </TableHead>
-    <TableBody>
-    {requests.map((request) => (
-            <TableRow key={request.id}>
-                <TableCell>{request.id}</TableCell>
-                <TableCell>{request.courseName}</TableCell>
-                <TableCell>{request.status}</TableCell>
-                <TableCell>{new Date(request.createTime).toLocaleDateString()}</TableCell>
-                </TableRow>
-        ))}
-    </TableBody>
-    </Table>
-    </TableContainer>
-);
+                        <TableCell>Курс</TableCell>
+                        <TableCell>Статус</TableCell>
+                        <TableCell>Комментарий</TableCell>
+                        <TableCell>Дата подачи</TableCell>
+
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {requests.map((request) => (
+                        <TableRow key={request.id}>
+                            <TableCell>{request.id}</TableCell>
+                            <TableCell>{request.courseName}</TableCell>
+                            <TableCell>{request.status}</TableCell>
+                            <TableCell>{request.requestText}</TableCell>
+                            <TableCell>{new Date(request.createTime).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </TableContainer>
+    );
 };
 
 export default StudentRequestList;

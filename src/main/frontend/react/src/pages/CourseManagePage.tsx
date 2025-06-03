@@ -789,13 +789,13 @@ const CourseManagePage = () => {
                             </Stack>
                         ) : isAdmin && (
                             <>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<Edit/>}
-                                    onClick={() => setEditGroupsMode(true)}
-                                >
-                                    Управлять группами
-                                </Button>
+                                {/*<Button*/}
+                                {/*    variant="contained"*/}
+                                {/*    startIcon={<Edit/>}*/}
+                                {/*    onClick={() => setEditGroupsMode(true)}*/}
+                                {/*>*/}
+                                {/*    Управлять группами*/}
+                                {/*</Button>*/}
                                 <Button
                                     variant="contained"
                                     startIcon={<Group/>}

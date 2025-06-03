@@ -125,14 +125,6 @@ function SignUpLink() {
     );
 }
 
-function ForgotPasswordLink() {
-    return (
-        <Link href="/forgot-password" variant="body2">
-            Забыли пароль?
-        </Link>
-    );
-}
-
 interface LoginModalProps {
     open: boolean;
     onClose: () => void;
@@ -213,11 +205,6 @@ function LoginModal({ open, onClose }: LoginModalProps) {
                     <CustomEmailField />
                     <CustomPasswordField />
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        {activeTab === 'student' && <RememberMeCheckbox />}
-                        <ForgotPasswordLink />
-                    </Box>
-
                     <CustomButton />
                 </Box>
 
@@ -242,27 +229,5 @@ function LoginModal({ open, onClose }: LoginModalProps) {
     );
 }
 
-function RememberMeCheckbox() {
-    const theme = useTheme();
-    return (
-        <FormControlLabel
-            label="Запомнить меня"
-            control={
-                <Checkbox
-                    name="remember"
-                    value="true"
-                    color="primary"
-                    sx={{ padding: 0.5, '& .MuiSvgIcon-root': { fontSize: 20 } }}
-                />
-            }
-            sx={{
-                '& .MuiTypography-root': {
-                    color: 'text.secondary',
-                    fontSize: theme.typography.pxToRem(14),
-                },
-            }}
-        />
-    );
-}
 
 export default LoginModal;

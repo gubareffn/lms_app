@@ -91,7 +91,7 @@ export const HomePage = () => {
                                         }
                                     }}
                                 >
-                                    О системе
+                                    Войти
                                 </Button>
                             </Box>
                         </Box>

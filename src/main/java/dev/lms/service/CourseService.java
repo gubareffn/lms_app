@@ -30,6 +30,13 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
+    public List<CourseDetailsDto> getAllCoursesWithDetails() {
+        return courseRepository.findAllWithRelations().stream()
+                .map(CourseDetailsDto::new)
+                .collect(Collectors.toList());
+    }
+
+
     public CourseDetailsDto getCourseDetails(Integer id) {
         Course course = courseRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new RuntimeException ("Course not found with id: " + id));

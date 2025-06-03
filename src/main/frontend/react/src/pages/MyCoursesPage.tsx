@@ -17,7 +17,7 @@ import { useAuth } from "../components/AuthContext";
 import { School } from '@mui/icons-material';
 
 interface Course {
-    id: number;
+    courseId: number;
     name: string;
     studyDirection: string;
     courseStartDate: string;
@@ -116,7 +116,7 @@ const ActiveCourses = () => {
         }}>
             {courses.map((course) => (
                 <Card
-                    key={course.id}
+                    key={course.courseId}
                     sx={{
                         borderRadius: 3,
                         boxShadow: theme.shadows[1],
@@ -186,7 +186,7 @@ const ActiveCourses = () => {
                     <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
                         <Button
                             component={course.percent === 100 ? 'div' : Link}
-                            to={`/courses/materials/${course.id}`}
+                            to={`/courses/materials/${course.courseId}`}
                             variant="contained"
                             size="small"
                             disabled={course.percent === 100}

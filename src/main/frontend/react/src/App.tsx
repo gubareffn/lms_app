@@ -19,6 +19,7 @@ import TeachingPage from "./pages/TeachingPage";
 import CourseCreatePage from "./pages/CourseCreatePage";
 import AdminPage from "./pages/AdminPage";
 import CourseManagePage from "./pages/CourseManagePage";
+import ReferencesPage from "./pages/ReferencesPage";
 
 
 // import StudentProfile from "./pages/StudentProfile";
@@ -47,6 +48,7 @@ function App() {
                         <Route path="/teaching" element={<TeachingPage />} />
                         <Route path="/teaching/create-course" element={<CourseCreatePage/>} />
                         <Route path="/admin" element={<AdminPage/>} />
+                        <Route path="/admin/references" element={<ReferencesPage/>} />
 
                     </Routes>
                 </main>

@@ -39,18 +39,13 @@ public class StudyingProgressService {
     }
 
     public List <CourseWithProgressDto> getCoursesWithProgress(Integer studentId) {
-//        Request request = requestRepository.findRequestByStudentId(studentId)
-//                .orElseThrow(() -> new EntityNotFoundException("Request not found"));
-//
-//        Integer requestId = request.getId();
-
         return progressRepository.findAllCoursesWithProgress(studentId).stream()
                 .map(CourseWithProgressDto::new)
                 .collect(Collectors.toList());
     }
 
 
-    private StudyingProgress createNewProgress(Request request) {
+    public StudyingProgress createNewProgress(Request request) {
         // Получаем статус "В процессе" (id = 1)
         StudyingStatus defaultStatus = studyingStatusRepository.findById(1)
                 .orElseThrow(() -> new RuntimeException("Default status not found"));

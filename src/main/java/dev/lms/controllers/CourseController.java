@@ -33,6 +33,11 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getAllCourses());
     }
 
+    @GetMapping("/details")
+    public ResponseEntity<List<CourseDetailsDto>> getAllCoursesWithDetails() {
+        return ResponseEntity.ok(courseService.getAllCoursesWithDetails());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<CourseDetailsDto> getCourseById(@PathVariable Integer id) {
         CourseDetailsDto courseDetails = courseService.getCourseDetails(id);

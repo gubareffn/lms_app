@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import Applications from './MyRequestsList';
 import ActiveCourses from './MyCoursesPage';
-// import ActiveCourses from './ActiveCourses';
 
 const MyEducationPage = () => {
     const [activeTab, setActiveTab] = useState<'courses' | 'applications'>('courses');
@@ -19,7 +18,7 @@ const MyEducationPage = () => {
     return (
         <Box sx={{
             display: 'flex',
-            minHeight: 'calc(100vh - 64px)', // Учитываем высоту AppBar
+            minHeight: 'calc(100vh - 64px)',
             backgroundColor: '#f5f5f5'
         }}>
             {/* Боковое меню */}

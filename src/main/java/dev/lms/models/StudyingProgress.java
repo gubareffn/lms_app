@@ -31,7 +31,7 @@ public class StudyingProgress {
     @Column(name = "final_exam_result")
     private Integer finaExamResult;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "request_id", nullable = false)
     private Request request;
 

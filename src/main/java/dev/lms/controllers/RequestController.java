@@ -5,6 +5,7 @@ import dev.lms.jwt.JwtCore;
 import dev.lms.models.*;
 import dev.lms.repository.*;
 import dev.lms.service.RequestService;
+import dev.lms.service.StudyingProgressService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/requests")
@@ -24,6 +26,7 @@ public class RequestController {
     private final RequestStatusRepository requestStatusRepository;
     private final WorkerRepository workerRepository;
     private final GroupRepository groupRepository;
+    private final StudyingProgressService studyingProgressService;
 
     // Получение списка всех заявок
     @GetMapping
@@ -103,10 +106,13 @@ public class RequestController {
 
         Integer groupId = requestBody.get("groupId");
         Group group = groupRepository.findById(groupId).orElse(null);
-        if (updateStatus == null) {
+        if (group == null) {
             return ResponseEntity.status(404).body("Group not found");
         }
 
+        if (Objects.equals(updateStatus.getName(), "Одобрена")) {
+            studyingProgressService.createNewProgress(updateRequest);
+        }
         updateRequest.setWorker(worker);
         updateRequest.setGroup(group);
         updateRequest.setStatus(updateStatus);

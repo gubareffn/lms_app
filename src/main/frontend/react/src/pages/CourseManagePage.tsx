@@ -820,9 +820,9 @@ const CourseManagePage = () => {
                                     <TableHead>
                                         <TableRow>
                                             <TableCell>Название группы</TableCell>
-                                            <TableCell>Студентов</TableCell>
-                                            <TableCell>Статус</TableCell>
-                                            {editGroupsMode && isAdmin && <TableCell>Действия</TableCell>}
+                                            {/*<TableCell>Студентов</TableCell>*/}
+                                            {/*<TableCell>Статус</TableCell>*/}
+                                            {/*{editGroupsMode && isAdmin && <TableCell>Действия</TableCell>}*/}
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -834,29 +834,29 @@ const CourseManagePage = () => {
                                                 sx={{ cursor: 'pointer' }}
                                             >
                                                 <TableCell>{group.name}</TableCell>
-                                                <TableCell>
-                                                    {group.studentCount}/{group.maxStudentCount}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Chip
-                                                        label={group.studentCount < group.maxStudentCount ? 'Доступна' : 'Заполнена'}
-                                                        color={group.studentCount < group.maxStudentCount ? 'success' : 'error'}
-                                                        size="small"
-                                                    />
-                                                </TableCell>
-                                                {editGroupsMode && isAdmin && (
-                                                    <TableCell>
-                                                        <IconButton
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleRemoveGroup(group.id);
-                                                            }}
-                                                            color="error"
-                                                        >
-                                                            <Delete />
-                                                        </IconButton>
-                                                    </TableCell>
-                                                )}
+                                                {/*<TableCell>*/}
+                                                {/*    {group.studentCount}/{group.maxStudentCount}*/}
+                                                {/*</TableCell>*/}
+                                                {/*<TableCell>*/}
+                                                {/*    <Chip*/}
+                                                {/*        label={group.studentCount < group.maxStudentCount ? 'Доступна' : 'Заполнена'}*/}
+                                                {/*        color={group.studentCount < group.maxStudentCount ? 'success' : 'error'}*/}
+                                                {/*        size="small"*/}
+                                                {/*    />*/}
+                                                {/*</TableCell>*/}
+                                                {/*{editGroupsMode && isAdmin && (*/}
+                                                {/*    // <TableCell>*/}
+                                                {/*    //     <IconButton*/}
+                                                {/*    //         onClick={(e) => {*/}
+                                                {/*    //             e.stopPropagation();*/}
+                                                {/*    //             handleRemoveGroup(group.id);*/}
+                                                {/*    //         }}*/}
+                                                {/*    //         color="error"*/}
+                                                {/*    //     >*/}
+                                                {/*    //         <Delete />*/}
+                                                {/*    //     </IconButton>*/}
+                                                {/*    // </TableCell>*/}
+                                                {/*// )}*/}
                                             </TableRow>
                                         ))}
                                     </TableBody>

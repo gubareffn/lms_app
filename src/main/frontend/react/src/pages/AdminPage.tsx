@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     Box, List, ListItem, ListItemIcon, ListItemText, Typography, Divider,
     Container, ListItemButton, Paper, Table, TableBody, TableCell,
@@ -6,12 +6,14 @@ import {
     CircularProgress, Alert, IconButton, Dialog, DialogTitle, DialogContent,
     DialogContentText, DialogActions, TextField, Chip, Link, Tabs, Tab
 } from '@mui/material';
-import { Book, Group, Assignment, Delete, Comment, Person, Check,
+import {
+    Book, Group, Assignment, Delete, Comment, Person, Check,
     Person as StudentIcon, School as TeacherIcon, AdminPanelSettings as AdminIcon,
-    Add as AddIcon, Edit as EditIcon} from '@mui/icons-material';
+    Add as AddIcon, Edit as EditIcon, KeyboardArrowUp, KeyboardArrowDown
+} from '@mui/icons-material';
 import axios from "axios";
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from "../components/AuthContext";
+import {useNavigate} from 'react-router-dom';
+import {useAuth} from "../components/AuthContext";
 
 interface Request {
     id: number;
@@ -62,20 +64,35 @@ interface Worker {
     password: string;
 }
 
+interface Course {
+    id: number;
+    name: string;
+    description: string;
+    studyDirection: string;
+    resultCompetence: string;
+    hoursCount: string;
+    status: string;
+    category: string;
+    startDate: string;
+    endDate: string;
+    groups?: Group[]
+}
+
 const AdminPage = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const {user} = useAuth();
     const [activeTab, setActiveTab] = useState('all-requests');
     const [requests, setRequests] = useState<Request[]>([]);
     const [statusOptions, setStatusOptions] = useState<RequestStatus[]>([]);
     const [groupOptions, setGroupOptions] = useState<Group[]>([]);
-    const [groupsLoading, setGroupsLoading] = useState<{[key: number]: boolean}>({});
+    const [groupsLoading, setGroupsLoading] = useState<{ [key: number]: boolean }>({});
     const [loading, setLoading] = useState({
         requests: true,
         statuses: true,
         groups: true,
         students: false,
-        worker: false
+        worker: false,
+        courses: false
     });
     const [error, setError] = useState<string | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -83,7 +100,7 @@ const AdminPage = () => {
     const [commentDialogOpen, setCommentDialogOpen] = useState(false);
     const [currentRequest, setCurrentRequest] = useState<Request | null>(null);
     const [newComment, setNewComment] = useState('');
-    const [editableRequests, setEditableRequests] = useState<{[key: number]: Partial<Request>}>({});
+    const [editableRequests, setEditableRequests] = useState<{ [key: number]: Partial<Request> }>({});
 
     const [students, setStudents] = useState<Student[]>([]);
     const [employees, setEmployees] = useState<Worker[]>([]);
@@ -95,6 +112,13 @@ const AdminPage = () => {
     const [currentWorker, setCurrentWorker] = useState<Worker | null>(null);
     const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
     const [availableRoles, setAvailableRoles] = useState<string[]>(['Администратор', 'Преподаватель']);
+
+    const [expandedCourseId, setExpandedCourseId] = useState<number | null>(null);
+    const [loadingGroups, setLoadingGroups] = useState<{[key: number]: boolean}>({});
+
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [deleteCourseDialogOpen, setDeleteCourseDialogOpen] = useState(false);
+    const [courseToDelete, setCourseToDelete] = useState<number | null>(null);
 
     const [addStudentDialogOpen, setAddStudentDialogOpen] = useState(false);
     const [addWorkerDialogOpen, setAddWorkerDialogOpen] = useState(false);
@@ -120,12 +144,15 @@ const AdminPage = () => {
         } else if (activeTab === 'users') {
             fetchStudents();
             fetchWorkers();
+        } else if (activeTab === 'course-managing') {
+            fetchCourses();
         }
     }, [activeTab]);
 
+    // Загрузка заявок
     const fetchData = async () => {
         try {
-            setLoading({ requests: true, statuses: true, groups: true, students: false, worker: false });
+            setLoading({requests: true, statuses: true, groups: true, students: false, worker: false, courses: false});
             setError(null);
 
             const [requestsResponse, statusesResponse] = await Promise.all([
@@ -139,13 +166,21 @@ const AdminPage = () => {
             setError('Не удалось загрузить данные');
             console.error('Error:', err);
         } finally {
-            setLoading({ requests: false, statuses: false, groups: false, students: false, worker: false });
+            setLoading({
+                requests: false,
+                statuses: false,
+                groups: false,
+                students: false,
+                worker: false,
+                courses: false
+            });
         }
     };
 
+    // Загрузка студентов
     const fetchStudents = async () => {
         try {
-            setLoading(prev => ({ ...prev, students: true }));
+            setLoading(prev => ({...prev, students: true}));
             setError(null);
             const response = await axios.get<Student[]>('http://localhost:8080/api/students');
             setStudents(response.data);
@@ -153,13 +188,14 @@ const AdminPage = () => {
             setError('Не удалось загрузить список студентов');
             console.error('Error loading students:', err);
         } finally {
-            setLoading(prev => ({ ...prev, students: false }));
+            setLoading(prev => ({...prev, students: false}));
         }
     };
 
+    // Загрузка работников
     const fetchWorkers = async () => {
         try {
-            setLoading(prev => ({ ...prev, employees: true }));
+            setLoading(prev => ({...prev, employees: true}));
             setError(null);
             const response = await axios.get<Worker[]>('http://localhost:8080/api/workers');
             setEmployees(response.data);
@@ -167,10 +203,70 @@ const AdminPage = () => {
             setError('Не удалось загрузить список работников');
             console.error('Error loading employees:', err);
         } finally {
-            setLoading(prev => ({ ...prev, employees: false }));
+            setLoading(prev => ({...prev, employees: false}));
         }
     };
 
+    // Загрузка курсов
+    const fetchCourses = async () => {
+        try {
+            setLoading(prev => ({...prev, courses: true}));
+            setError(null);
+            const response = await axios.get<Course[]>('http://localhost:8080/api/courses/details');
+            setCourses(response.data);
+        } catch (err) {
+            setError('Не удалось загрузить список курсов');
+            console.error('Error loading courses:', err);
+        } finally {
+            setLoading(prev => ({...prev, courses: false}));
+        }
+    };
+
+    const handleDeleteCourseClick = (courseId: number) => {
+        setCourseToDelete(courseId);
+        setDeleteCourseDialogOpen(true);
+    };
+
+    // Удаление курса
+    const handleDeleteCourseConfirm = async () => {
+        if (!courseToDelete) return;
+
+        try {
+            await axios.delete(
+                `http://localhost:8080/api/courses/${courseToDelete}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`
+                    }
+                }
+            );
+            setCourses(prev => prev.filter(course => course.id !== courseToDelete));
+        } catch (err) {
+            setError('Ошибка при удалении курса');
+            console.error(err);
+        } finally {
+            setDeleteCourseDialogOpen(false);
+            setCourseToDelete(null);
+        }
+    };
+
+    //Загрузка групп для таблицы курсов
+    const fetchCourseGroups  = async (courseId: number) => {
+        try {
+            setGroupsLoading(prev => ({...prev, [courseId]: true}));
+            const response = await axios.get<Group[]>(`http://localhost:8080/api/groups/${courseId}`);
+            setCourses(prev => prev.map(course =>
+                course.id === courseId ? {...course, groups: response.data} : course
+            ));
+        } catch (err) {
+            console.error('Error loading groups:', err);
+            setError('Не удалось загрузить группы курса');
+        } finally {
+            setGroupsLoading(prev => ({...prev, [courseId]: false}));
+        }
+    };
+
+    // Загрузка групп конкретного курса
     const fetchGroupsForCourse = async (courseId: number, requestId: number) => {
         try {
             setGroupsLoading(prev => ({...prev, [requestId]: true}));
@@ -196,6 +292,20 @@ const AdminPage = () => {
         }));
     };
 
+    const handleExpandCourse = (courseId: number) => {
+        if (expandedCourseId === courseId) {
+            setExpandedCourseId(null);
+        } else {
+            setExpandedCourseId(courseId);
+            // Если группы еще не загружены - загружаем их
+            const course = courses.find(c => c.id === courseId);
+            if (course && !course.groups) {
+                fetchCourseGroups(courseId);
+            }
+        }
+    };
+
+    // Обработка заявки
     const handleSaveChanges = async (requestId: number) => {
         try {
             const changes = editableRequests[requestId];
@@ -238,7 +348,7 @@ const AdminPage = () => {
 
             // Удаляем сохраненные изменения
             setEditableRequests(prev => {
-                const newState = { ...prev };
+                const newState = {...prev};
                 delete newState[requestId];
                 return newState;
             });
@@ -255,13 +365,14 @@ const AdminPage = () => {
         setCommentDialogOpen(true);
     };
 
+    // Добавление комментария
     const handleSaveComment = async () => {
         if (!currentRequest) return;
 
         try {
             await axios.put(
                 `http://localhost:8080/api/requests/${currentRequest.id}/comment`,
-                { requestText: newComment },
+                {requestText: newComment},
                 {
                     headers: {
                         'Authorization': `Bearer ${user?.token}`,
@@ -271,7 +382,7 @@ const AdminPage = () => {
             );
 
             setRequests(prev => prev.map(req =>
-                req.id === currentRequest.id ? { ...req, requestText: newComment } : req
+                req.id === currentRequest.id ? {...req, requestText: newComment} : req
             ));
 
             setCommentDialogOpen(false);
@@ -281,11 +392,7 @@ const AdminPage = () => {
         }
     };
 
-    const handleDeleteClick = (requestId: number) => {
-        setRequestToDelete(requestId);
-        setDeleteDialogOpen(true);
-    };
-
+    // Удаление заявки
     const handleDeleteConfirm = async () => {
         if (!requestToDelete) return;
 
@@ -308,6 +415,11 @@ const AdminPage = () => {
         }
     };
 
+    const handleDeleteClick = (requestId: number) => {
+        setRequestToDelete(requestId);
+        setDeleteDialogOpen(true);
+    };
+
     const handleNavigateToEmployee = (workerId: number) => {
         navigate(`/profile/employee/${workerId}`);
     };
@@ -320,18 +432,17 @@ const AdminPage = () => {
         navigate(`/courses/${courseId}/manage`);
     };
 
-    // Open student edit dialog
+    // Диалог редактирования студента
     const handleEditStudentClick = (student: Student) => {
         setCurrentStudent(student);
         setEditStudentDialogOpen(true);
     };
 
-    // Open worker edit dialog
+    // Диалог редактирования работника
     const handleEditWorkerClick = (worker: Worker) => {
         setCurrentWorker(worker);
         setEditWorkerDialogOpen(true);
     };
-
 
     // Сохранить студента
     const handleSaveStudent = async () => {
@@ -414,7 +525,7 @@ const AdminPage = () => {
 
             setStudents([...students, response.data]);
             setAddStudentDialogOpen(false);
-            setNewStudent({ lastName: '', firstName: '', middleName: '', email: '', password: '' });
+            setNewStudent({lastName: '', firstName: '', middleName: '', email: '', password: ''});
         } catch (err) {
             setError('Ошибка при добавлении студента');
             console.error(err);
@@ -437,7 +548,7 @@ const AdminPage = () => {
 
             setEmployees([...employees, response.data]);
             setAddWorkerDialogOpen(false);
-            setNewWorker({ lastName: '', firstName: '', middleName: '', email: '', role: 'Преподаватель', password: '' });
+            setNewWorker({lastName: '', firstName: '', middleName: '', email: '', role: 'Преподаватель', password: ''});
         } catch (err) {
             setError('Ошибка при добавлении работника');
             console.error(err);
@@ -446,14 +557,14 @@ const AdminPage = () => {
 
     if (loading.requests || loading.statuses || loading.groups) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <CircularProgress />
+            <Box sx={{display: 'flex', justifyContent: 'center', mt: 4}}>
+                <CircularProgress/>
             </Box>
         );
     }
 
     return (
-        <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 64px)'}}>
+        <Box sx={{display: 'flex', minHeight: 'calc(100vh - 64px)'}}>
             {/* Боковое меню */}
             <Paper elevation={3} sx={{
                 width: 300,
@@ -469,9 +580,9 @@ const AdminPage = () => {
                             onClick={() => setActiveTab('all-requests')}
                         >
                             <ListItemIcon>
-                                <Book />
+                                <Book/>
                             </ListItemIcon>
-                            <ListItemText primary="Обработка заявок" />
+                            <ListItemText primary="Обработка заявок"/>
                         </ListItemButton>
                     </ListItem>
 
@@ -481,9 +592,9 @@ const AdminPage = () => {
                             onClick={() => setActiveTab('users')}
                         >
                             <ListItemIcon>
-                                <Assignment />
+                                <Assignment/>
                             </ListItemIcon>
-                            <ListItemText primary="Пользователи" />
+                            <ListItemText primary="Пользователи"/>
                         </ListItemButton>
                     </ListItem>
 
@@ -493,15 +604,23 @@ const AdminPage = () => {
                             onClick={() => setActiveTab('course-managing')}
                         >
                             <ListItemIcon>
-                                <Group />
+                                <Group/>
                             </ListItemIcon>
-                            <ListItemText primary="Курсы" />
+                            <ListItemText primary="Курсы"/>
+                        </ListItemButton>
+                    </ListItem>
+
+                    <ListItem disablePadding>
+                        <ListItemButton
+                            onClick={() => navigate('/admin/references')}
+                        >
+                            <ListItemText primary="Справочники" />
                         </ListItemButton>
                     </ListItem>
                 </List>
             </Paper>
 
-            <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+            <Container maxWidth="xl" sx={{mt: 4, mb: 4}}>
                 {activeTab === 'all-requests' && (
                     <Box>
                         <Typography variant="h5" gutterBottom>
@@ -509,7 +628,7 @@ const AdminPage = () => {
                         </Typography>
 
                         {error && (
-                            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+                            <Alert severity="error" sx={{mb: 2}} onClose={() => setError(null)}>
                                 {error}
                             </Alert>
                         )}
@@ -521,7 +640,6 @@ const AdminPage = () => {
                             <Table>
                                 <TableHead>
                                     <TableRow>
-                                        {/*<TableCell>ID</TableCell>*/}
                                         <TableCell>Студент</TableCell>
                                         <TableCell>Курс</TableCell>
                                         <TableCell>Дата создания</TableCell>
@@ -544,9 +662,9 @@ const AdminPage = () => {
                                                     <Link
                                                         component="button"
                                                         onClick={() => handleNavigateToStudent(request.studentId)}
-                                                        sx={{ display: 'flex', alignItems: 'center' }}
+                                                        sx={{display: 'flex', alignItems: 'center'}}
                                                     >
-                                                        <Person sx={{ mr: 1 }} />
+                                                        <Person sx={{mr: 1}}/>
                                                         {request.studentLastName} {request.studentFirstName} {request.studentMiddleName}
                                                     </Link>
                                                     <Typography variant="body2" color="text.secondary">
@@ -557,7 +675,7 @@ const AdminPage = () => {
                                                     <Link
                                                         component="button"
                                                         onClick={() => handleNavigateCourseManage(request.courseId)}
-                                                        sx={{ display: 'flex', alignItems: 'center' }}
+                                                        sx={{display: 'flex', alignItems: 'center'}}
                                                     >
                                                         {request.courseName}
                                                     </Link>
@@ -575,7 +693,7 @@ const AdminPage = () => {
                                                         value={currentStatus || ''}
                                                         onChange={(e) => handleFieldChange(request.id, 'status', e.target.value)}
                                                         size="small"
-                                                        sx={{ minWidth: 120 }}
+                                                        sx={{minWidth: 120}}
                                                     >
                                                         {statusOptions.map((status) => (
                                                             <MenuItem key={status.id} value={status.name}>
@@ -590,12 +708,13 @@ const AdminPage = () => {
                                                         onChange={(e) => handleFieldChange(request.id, 'groupId', Number(e.target.value))}
                                                         onOpen={() => fetchGroupsForCourse(request.courseId, request.id)}
                                                         size="small"
-                                                        sx={{ minWidth: 120 }}
+                                                        sx={{minWidth: 120}}
                                                         MenuProps={{
                                                             disablePortal: true,
-                                                            TransitionProps: { timeout: 0 }
+                                                            TransitionProps: {timeout: 0}
                                                         }}
-                                                        IconComponent={groupsLoading[request.id] ? () => <CircularProgress size={24} /> : undefined}
+                                                        IconComponent={groupsLoading[request.id] ? () =>
+                                                            <CircularProgress size={24}/> : undefined}
                                                     >
                                                         <MenuItem value="">Не выбрана</MenuItem>
                                                         {groupOptions.map((group) => (
@@ -605,7 +724,7 @@ const AdminPage = () => {
                                                         ))}
                                                     </Select>
                                                 </TableCell>
-                                                <TableCell sx={{ maxWidth: 200 }}>
+                                                <TableCell sx={{maxWidth: 200}}>
                                                     {request.requestText || 'Нет комментария'}
                                                 </TableCell>
                                                 <TableCell>
@@ -613,20 +732,20 @@ const AdminPage = () => {
                                                         color="primary"
                                                         onClick={() => handleAddComment(request)}
                                                     >
-                                                        <Comment />
+                                                        <Comment/>
                                                     </IconButton>
                                                     <IconButton
                                                         color="error"
                                                         onClick={() => handleDeleteClick(request.id)}
                                                     >
-                                                        <Delete />
+                                                        <Delete/>
                                                     </IconButton>
                                                     <IconButton
                                                         color="success"
                                                         onClick={() => handleSaveChanges(request.id)}
                                                         disabled={!editableRequests[request.id]}
                                                     >
-                                                        <Check />
+                                                        <Check/>
                                                     </IconButton>
                                                 </TableCell>
                                             </TableRow>
@@ -697,14 +816,14 @@ const AdminPage = () => {
                         <Tabs
                             value={usersTab}
                             onChange={(e, newValue) => setUsersTab(newValue)}
-                            sx={{ mb: 3 }}
+                            sx={{mb: 3}}
                         >
-                            <Tab label="Студенты" value="students" icon={<StudentIcon />} />
-                            <Tab label="Работники" value="workers" icon={<TeacherIcon />} />
+                            <Tab label="Студенты" value="students" icon={<StudentIcon/>}/>
+                            <Tab label="Работники" value="workers" icon={<TeacherIcon/>}/>
                         </Tabs>
 
                         {error && (
-                            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+                            <Alert severity="error" sx={{mb: 2}} onClose={() => setError(null)}>
                                 {error}
                             </Alert>
                         )}
@@ -712,7 +831,7 @@ const AdminPage = () => {
                         {usersTab === 'students' ? (
                             <Button
                                 variant="contained"
-                                startIcon={<AddIcon />}
+                                startIcon={<AddIcon/>}
                                 onClick={() => setAddStudentDialogOpen(true)}
                             >
                                 Добавить студента
@@ -720,7 +839,7 @@ const AdminPage = () => {
                         ) : (
                             <Button
                                 variant="contained"
-                                startIcon={<AddIcon />}
+                                startIcon={<AddIcon/>}
                                 onClick={() => setAddWorkerDialogOpen(true)}
                             >
                                 Добавить работника
@@ -742,7 +861,7 @@ const AdminPage = () => {
                                         {loading.students ? (
                                             <TableRow>
                                                 <TableCell colSpan={5} align="center">
-                                                    <CircularProgress />
+                                                    <CircularProgress/>
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
@@ -753,9 +872,9 @@ const AdminPage = () => {
                                                         <Link
                                                             component="button"
                                                             onClick={() => handleNavigateToStudent(student.id)}
-                                                            sx={{ display: 'flex', alignItems: 'center' }}
+                                                            sx={{display: 'flex', alignItems: 'center'}}
                                                         >
-                                                            <Person sx={{ mr: 1 }} />
+                                                            <Person sx={{mr: 1}}/>
                                                             {student.lastName} {student.firstName} {student.middleName}
                                                         </Link>
                                                     </TableCell>
@@ -763,10 +882,10 @@ const AdminPage = () => {
                                                     <TableCell>
                                                         <IconButton color="primary"
                                                                     onClick={() => handleEditStudentClick(student)}>
-                                                            <EditIcon />
+                                                            <EditIcon/>
                                                         </IconButton>
                                                         <IconButton color="error">
-                                                            <Delete />
+                                                            <Delete/>
                                                         </IconButton>
                                                     </TableCell>
                                                 </TableRow>
@@ -791,7 +910,7 @@ const AdminPage = () => {
                                         {loading.worker ? (
                                             <TableRow>
                                                 <TableCell colSpan={5} align="center">
-                                                    <CircularProgress />
+                                                    <CircularProgress/>
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
@@ -802,9 +921,9 @@ const AdminPage = () => {
                                                         <Link
                                                             component="button"
                                                             onClick={() => handleNavigateToEmployee(worker.id)}
-                                                            sx={{ display: 'flex', alignItems: 'center' }}
+                                                            sx={{display: 'flex', alignItems: 'center'}}
                                                         >
-                                                            <Person sx={{ mr: 1 }} />
+                                                            <Person sx={{mr: 1}}/>
                                                             {worker.lastName} {worker.firstName} {worker.middleName}
                                                         </Link>
                                                     </TableCell>
@@ -813,10 +932,10 @@ const AdminPage = () => {
                                                     <TableCell>
                                                         <IconButton color="primary"
                                                                     onClick={() => handleEditWorkerClick(worker)}>
-                                                            <EditIcon />
+                                                            <EditIcon/>
                                                         </IconButton>
                                                         <IconButton color="error">
-                                                            <Delete />
+                                                            <Delete/>
                                                         </IconButton>
                                                     </TableCell>
                                                 </TableRow>
@@ -828,6 +947,181 @@ const AdminPage = () => {
                         )}
                     </Box>
                 )}
+
+                {activeTab === 'course-managing' && (
+                    <Box>
+                        <Typography variant="h5" gutterBottom>
+                            Управление курсами
+                        </Typography>
+
+                        {error && (
+                            <Alert severity="error" sx={{mb: 2}} onClose={() => setError(null)}>
+                                {error}
+                            </Alert>
+                        )}
+
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon/>}
+                            onClick={() => navigate('/courses/create')}
+                            sx={{mb: 2}}
+                        >
+                            Создать курс
+                        </Button>
+
+                        <TableContainer component={Paper}>
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell />
+                                        <TableCell>Название</TableCell>
+                                        <TableCell>Статус</TableCell>
+                                        <TableCell>Описание</TableCell>
+                                        <TableCell>Кол-во часов</TableCell>
+                                        <TableCell>Категория</TableCell>
+                                        <TableCell>Дата начала</TableCell>
+                                        <TableCell>Дата окончания</TableCell>
+                                        <TableCell>Действия</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {loading.courses ? (
+                                        <TableRow>
+                                            <TableCell colSpan={9} align="center">
+                                                <CircularProgress />
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        courses.map((course) => (
+                                            <React.Fragment key={course.id}>
+                                                <TableRow>
+                                                    <TableCell>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handleExpandCourse(course.id)}
+                                                        >
+                                                            {expandedCourseId === course.id ?
+                                                                <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                                                        </IconButton>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Link
+                                                            component="button"
+                                                            onClick={() => navigate(`/courses/${course.id}/manage`)}
+                                                        >
+                                                            {course.name}
+                                                        </Link>
+                                                    </TableCell>
+                                                    <TableCell>{course.status}</TableCell>
+                                                    <TableCell>
+                                                        {course.description ?
+                                                            (course.description.length > 50
+                                                                ? `${course.description.substring(0, 50)}...`
+                                                                : course.description)
+                                                            : 'Нет описания'}
+                                                    </TableCell>
+                                                    <TableCell>{course.hoursCount}</TableCell>
+                                                    <TableCell>{course.category}</TableCell>
+                                                    <TableCell>{course.startDate}</TableCell>
+                                                    <TableCell>{course.endDate}</TableCell>
+                                                    <TableCell>
+                                                        <IconButton
+                                                            color="primary"
+                                                            onClick={() => navigate(`/courses/${course.id}/edit`)}
+                                                        >
+                                                            <EditIcon />
+                                                        </IconButton>
+                                                        <IconButton
+                                                            color="error"
+                                                            onClick={() => handleDeleteCourseClick(course.id)}
+                                                        >
+                                                            <Delete />
+                                                        </IconButton>
+                                                    </TableCell>
+                                                </TableRow>
+                                                {expandedCourseId === course.id && (
+                                                    <TableRow>
+                                                        <TableCell colSpan={9} sx={{ py: 0 }}>
+                                                            <Box sx={{ margin: 1 }}>
+                                                                <Typography variant="h6" gutterBottom component="div">
+                                                                    Группы курса
+                                                                </Typography>
+                                                                {groupsLoading[course.id] ? (
+                                                                    <CircularProgress size={24} />
+                                                                ) : course.groups && course.groups.length > 0 ? (
+                                                                    <Table size="small">
+                                                                        <TableHead>
+                                                                            <TableRow>
+                                                                                <TableCell>Название</TableCell>
+                                                                                <TableCell>Действия</TableCell>
+                                                                            </TableRow>
+                                                                        </TableHead>
+                                                                        <TableBody>
+                                                                            {course.groups.map((group) => (
+                                                                                <TableRow key={group.id}>
+                                                                                    <TableCell>{group.name}</TableCell>
+                                                                                     <TableCell>
+                                                                                        <IconButton size="small">
+                                                                                            <EditIcon fontSize="small" />
+                                                                                        </IconButton>
+                                                                                        <IconButton size="small" color="error">
+                                                                                            <Delete fontSize="small" />
+                                                                                        </IconButton>
+                                                                                    </TableCell>
+                                                                                </TableRow>
+                                                                            ))}
+                                                                        </TableBody>
+                                                                    </Table>
+                                                                ) : (
+                                                                    <Typography variant="body2">
+                                                                        У этого курса пока нет групп
+                                                                    </Typography>
+                                                                )}
+                                                                {/*<Button*/}
+                                                                {/*    variant="outlined"*/}
+                                                                {/*    size="small"*/}
+                                                                {/*    startIcon={<AddIcon />}*/}
+                                                                {/*    sx={{ mt: 1 }}*/}
+                                                                {/*    onClick={() => navigate(`/courses/${course.id}/groups/create`)}*/}
+                                                                {/*>*/}
+                                                                {/*    Добавить группу*/}
+                                                                {/*</Button>*/}
+                                                            </Box>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                            </React.Fragment>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+
+                        {/* Диалог подтверждения удаления курса */}
+                        <Dialog
+                            open={deleteCourseDialogOpen}
+                            onClose={() => setDeleteCourseDialogOpen(false)}
+                        >
+                            <DialogTitle>Подтверждение удаления</DialogTitle>
+                            <DialogContent>
+                                <DialogContentText>
+                                    Вы уверены, что хотите удалить этот курс? Это действие нельзя отменить.
+                                </DialogContentText>
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={() => setDeleteCourseDialogOpen(false)}>Отмена</Button>
+                                <Button
+                                    onClick={handleDeleteCourseConfirm}
+                                    color="error"
+                                    variant="contained"
+                                >
+                                    Удалить
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                    </Box>
+                )}
+
                 <Dialog
                     open={editStudentDialogOpen}
                     onClose={() => setEditStudentDialogOpen(false)}
@@ -847,7 +1141,7 @@ const AdminPage = () => {
                                         ...currentStudent,
                                         lastName: e.target.value
                                     })}
-                                    sx={{ mt: 2 }}
+                                    sx={{mt: 2}}
                                 />
                                 <TextField
                                     margin="dense"
@@ -919,7 +1213,7 @@ const AdminPage = () => {
                             fullWidth
                             value={newStudent.lastName}
                             onChange={(e) => setNewStudent({...newStudent, lastName: e.target.value})}
-                            sx={{ mt: 2 }}
+                            sx={{mt: 2}}
                         />
                         <TextField
                             margin="dense"
@@ -981,7 +1275,7 @@ const AdminPage = () => {
                             fullWidth
                             value={newWorker.lastName}
                             onChange={(e) => setNewWorker({...newWorker, lastName: e.target.value})}
-                            sx={{ mt: 2 }}
+                            sx={{mt: 2}}
                         />
                         <TextField
                             margin="dense"
@@ -1017,7 +1311,7 @@ const AdminPage = () => {
                             value={newWorker.role}
                             onChange={(e) => setNewWorker({...newWorker, role: e.target.value})}
                             fullWidth
-                            sx={{ mt: 2 }}
+                            sx={{mt: 2}}
                         >
                             {availableRoles.map(role => (
                                 <MenuItem key={role} value={role}>
@@ -1058,7 +1352,7 @@ const AdminPage = () => {
                                         ...currentWorker,
                                         lastName: e.target.value
                                     })}
-                                    sx={{ mt: 2 }}
+                                    sx={{mt: 2}}
                                 />
                                 <TextField
                                     margin="dense"
@@ -1107,7 +1401,7 @@ const AdminPage = () => {
                                         role: e.target.value
                                     })}
                                     fullWidth
-                                    sx={{ mt: 2 }}
+                                    sx={{mt: 2}}
                                 >
                                     {availableRoles.map(role => (
                                         <MenuItem key={role} value={role}>

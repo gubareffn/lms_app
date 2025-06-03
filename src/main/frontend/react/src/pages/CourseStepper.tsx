@@ -161,9 +161,6 @@ const CourseStepper = () => {
                         <Step key={material.id} completed={completedSteps.includes(index)}>
                             <StepLabel>
                                 <Typography variant="subtitle1">{material.name}</Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                    {new Date(material.adding_date).toLocaleDateString()}
-                                </Typography>
                             </StepLabel>
                         </Step>
                     ))}

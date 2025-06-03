@@ -64,7 +64,7 @@ public class WorkerController {
         createWorker.setPassword(passwordEncoder.encode(requestBody.get("password")));
         createWorker.setRole(role);
         workerService.saveWorker(createWorker);
-        return ResponseEntity.ok(createWorker);
+        return ResponseEntity.ok(new WorkerListDto(createWorker));
     }
 
     // Обновление работника
@@ -87,7 +87,7 @@ public class WorkerController {
         updateWorker.setPassword(passwordEncoder.encode(requestBody.get("password")));
         updateWorker.setRole(role);
         workerService.saveWorker(updateWorker);
-        return ResponseEntity.ok(updateWorker);
+        return ResponseEntity.ok(new WorkerListDto(updateWorker));
     }
 
     @DeleteMapping("/{workerId}/delete")

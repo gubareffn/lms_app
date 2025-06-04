@@ -92,7 +92,8 @@ const AdminPage = () => {
         groups: true,
         students: false,
         worker: false,
-        courses: false
+        courses: false,
+        submit: false
     });
     const [error, setError] = useState<string | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -119,6 +120,12 @@ const AdminPage = () => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [deleteCourseDialogOpen, setDeleteCourseDialogOpen] = useState(false);
     const [courseToDelete, setCourseToDelete] = useState<number | null>(null);
+
+    // Удаление студента и работника
+    const [deleteStudentDialogOpen, setDeleteStudentDialogOpen] = useState(false);
+    const [deleteWorkerDialogOpen, setDeleteWorkerDialogOpen] = useState(false);
+    const [studentToDelete, setStudentToDelete] = useState<number | null>(null);
+    const [workerToDelete, setWorkerToDelete] = useState<number | null>(null);
 
     // Фильтры и поиск
     const [searchTerm, setSearchTerm] = useState('');
@@ -187,10 +194,72 @@ const AdminPage = () => {
         });
     };
 
+    // Функция для удаления студента
+    const handleDeleteStudent = (studentId: number) => {
+        setStudentToDelete(studentId);
+        setDeleteStudentDialogOpen(true);
+    };
+
+    const handleDeleteStudentConfirm = async () => {
+        if (!studentToDelete) return;
+
+        try {
+            setLoading(prev => ({ ...prev, submit: true }));
+            await axios.delete(
+                `http://localhost:8080/api/students/${studentToDelete}/delete`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`
+                    }
+                }
+            );
+
+            setStudents(prev => prev.filter(student => student.id !== studentToDelete));
+        } catch (err) {
+            setError('Ошибка при удалении студента');
+            console.error(err);
+        } finally {
+            setLoading(prev => ({ ...prev, submit: false }));
+            setDeleteStudentDialogOpen(false);
+            setStudentToDelete(null);
+        }
+    };
+
+    // Функция для удаления преподавателя/администратора
+    const handleDeleteWorker = (workerId: number) => {
+        setWorkerToDelete(workerId);
+        setDeleteWorkerDialogOpen(true);
+    };
+
+    const handleDeleteWorkerConfirm = async () => {
+        if (!workerToDelete) return;
+
+        try {
+            setLoading(prev => ({ ...prev, submit: true }));
+            await axios.delete(
+                `http://localhost:8080/api/workers/${workerToDelete}/delete`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`
+                    }
+                }
+            );
+
+            setEmployees(prev => prev.filter(worker => worker.id !== workerToDelete));
+        } catch (err) {
+            setError('Ошибка при удалении работника');
+            console.error(err);
+        } finally {
+            setLoading(prev => ({ ...prev, submit: false }));
+            setDeleteWorkerDialogOpen(false);
+            setWorkerToDelete(null);
+        }
+    };
+
     // Загрузка заявок
     const fetchData = async () => {
         try {
-            setLoading({requests: true, statuses: true, groups: true, students: false, worker: false, courses: false});
+            setLoading({requests: true, statuses: true, groups: true, students: false, worker: false, submit: false, courses: false});
             setError(null);
 
             const [requestsResponse, statusesResponse] = await Promise.all([
@@ -210,6 +279,7 @@ const AdminPage = () => {
                 groups: false,
                 students: false,
                 worker: false,
+                submit: false,
                 courses: false
             });
         }
@@ -271,7 +341,7 @@ const AdminPage = () => {
 
         try {
             await axios.delete(
-                `http://localhost:8080/api/courses/${courseToDelete}`,
+                `http://localhost:8080/api/courses/${courseToDelete}/delete`,
                 {
                     headers: {
                         'Authorization': `Bearer ${user?.token}`
@@ -732,7 +802,6 @@ const AdminPage = () => {
                                         <TableCell>Статус</TableCell>
                                         <TableCell>Группа</TableCell>
                                         <TableCell>Комментарий</TableCell>
-                                        <TableCell>Действия</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -818,12 +887,6 @@ const AdminPage = () => {
                                                         onClick={() => handleAddComment(request)}
                                                     >
                                                         <Comment/>
-                                                    </IconButton>
-                                                    <IconButton
-                                                        color="error"
-                                                        onClick={() => handleDeleteClick(request.id)}
-                                                    >
-                                                        <Delete/>
                                                     </IconButton>
                                                     <IconButton
                                                         color="success"
@@ -967,7 +1030,8 @@ const AdminPage = () => {
                                                                     onClick={() => handleEditStudentClick(student)}>
                                                             <EditIcon/>
                                                         </IconButton>
-                                                        <IconButton color="error">
+                                                        <IconButton color="error"
+                                                                    onClick={() => handleDeleteStudent(student.id)}>
                                                             <Delete/>
                                                         </IconButton>
                                                     </TableCell>
@@ -1015,7 +1079,14 @@ const AdminPage = () => {
                                                                     onClick={() => handleEditWorkerClick(worker)}>
                                                             <EditIcon/>
                                                         </IconButton>
-                                                        <IconButton color="error">
+                                                        <IconButton
+                                                            color="error"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteWorker(worker.id);
+                                                            }}
+                                                            disabled={loading.submit}
+                                                        >
                                                             <Delete/>
                                                         </IconButton>
                                                     </TableCell>
@@ -1063,6 +1134,7 @@ const AdminPage = () => {
                                         <TableCell>Категория</TableCell>
                                         <TableCell>Дата начала</TableCell>
                                         <TableCell>Дата окончания</TableCell>
+                                        <TableCell>Действия</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -1105,6 +1177,18 @@ const AdminPage = () => {
                                                     <TableCell>{course.category}</TableCell>
                                                     <TableCell>{course.startDate}</TableCell>
                                                     <TableCell>{course.endDate}</TableCell>
+                                                    <TableCell>
+                                                        <IconButton
+                                                            color="error"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteCourseClick(course.id);
+                                                            }}
+                                                            disabled={loading.submit}
+                                                        >
+                                                            <Delete/>
+                                                        </IconButton>
+                                                    </TableCell>
                                                 </TableRow>
                                                 {expandedCourseId === course.id && (
                                                     <TableRow>
@@ -1396,6 +1480,51 @@ const AdminPage = () => {
                             disabled={!newWorker.lastName || !newWorker.firstName || !newWorker.email || !newWorker.password}
                         >
                             Добавить
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog
+                    open={deleteStudentDialogOpen}
+                    onClose={() => setDeleteStudentDialogOpen(false)}
+                >
+                    <DialogTitle>Подтверждение удаления</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Вы уверены, что хотите удалить этого студента? Это действие нельзя отменить.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setDeleteStudentDialogOpen(false)}>Отмена</Button>
+                        <Button
+                            onClick={handleDeleteStudentConfirm}
+                            color="error"
+                            variant="contained"
+                            disabled={loading.submit}
+                        >
+                            {loading.submit ? <CircularProgress size={24} /> : 'Удалить'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog
+                    open={deleteWorkerDialogOpen}
+                    onClose={() => setDeleteWorkerDialogOpen(false)}
+                >
+                    <DialogTitle>Подтверждение удаления</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Вы уверены, что хотите удалить этого работника? Это действие нельзя отменить.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setDeleteWorkerDialogOpen(false)}>Отмена</Button>
+                        <Button
+                            onClick={handleDeleteWorkerConfirm}
+                            color="error"
+                            variant="contained"
+                            disabled={loading.submit}
+                        >
+                            {loading.submit ? <CircularProgress size={24} /> : 'Удалить'}
                         </Button>
                     </DialogActions>
                 </Dialog>

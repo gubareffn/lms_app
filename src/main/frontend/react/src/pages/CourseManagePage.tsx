@@ -195,6 +195,37 @@ const CourseManagePage = () => {
         }
     };
 
+    const handleRemoveStudentFromGroup = async (requestId: number) => {
+        try {
+            setLoading(prev => ({ ...prev, submit: true }));
+            setError(null);
+
+            await axios.put(
+                `http://localhost:8080/api/requests/${requestId}/group`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`
+                    }
+                }
+            );
+
+            // Обновляем список студентов в группе
+            if (selectedGroup) {
+                const [studentsResponse] = await Promise.all([
+                    axios.get(`http://localhost:8080/api/progress/groups/${selectedGroup}/students`),
+                ]);
+                setStudents(studentsResponse.data);
+            }
+
+            setStudents(prev => prev.filter(student => student.requestId !== requestId));
+        } catch (err) {
+            setError('Ошибка при удалении студента из группы');
+            console.error(err);
+        } finally {
+            setLoading(prev => ({ ...prev, submit: false }));
+        }
+    };
+
     // Загрузка студентов при выборе группы
     useEffect(() => {
         if (selectedGroup) {
@@ -404,11 +435,10 @@ const CourseManagePage = () => {
         }
     };
 
-
     const handleRemoveGroup = async (groupId: number) => {
         try {
             await axios.delete(
-                `http://localhost:8080/api/groups/${groupId}/delеte`,
+                `http://localhost:8080/api/groups/${groupId}/delete`,
                 {
                     headers: {
                         'Authorization': `Bearer ${user?.token}`
@@ -789,13 +819,13 @@ const CourseManagePage = () => {
                             </Stack>
                         ) : isAdmin && (
                             <>
-                                {/*<Button*/}
-                                {/*    variant="contained"*/}
-                                {/*    startIcon={<Edit/>}*/}
-                                {/*    onClick={() => setEditGroupsMode(true)}*/}
-                                {/*>*/}
-                                {/*    Управлять группами*/}
-                                {/*</Button>*/}
+                                <Button
+                                    variant="contained"
+                                    startIcon={<Edit/>}
+                                    onClick={() => setEditGroupsMode(true)}
+                                >
+                                    Управлять группами
+                                </Button>
                                 <Button
                                     variant="contained"
                                     startIcon={<Group/>}
@@ -844,19 +874,19 @@ const CourseManagePage = () => {
                                                 {/*        size="small"*/}
                                                 {/*    />*/}
                                                 {/*</TableCell>*/}
-                                                {/*{editGroupsMode && isAdmin && (*/}
-                                                {/*    // <TableCell>*/}
-                                                {/*    //     <IconButton*/}
-                                                {/*    //         onClick={(e) => {*/}
-                                                {/*    //             e.stopPropagation();*/}
-                                                {/*    //             handleRemoveGroup(group.id);*/}
-                                                {/*    //         }}*/}
-                                                {/*    //         color="error"*/}
-                                                {/*    //     >*/}
-                                                {/*    //         <Delete />*/}
-                                                {/*    //     </IconButton>*/}
-                                                {/*    // </TableCell>*/}
-                                                {/*// )}*/}
+                                                {editGroupsMode && isAdmin && (
+                                                    <TableCell>
+                                                        <IconButton
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleRemoveGroup(group.id);
+                                                            }}
+                                                            color="error"
+                                                        >
+                                                            <Delete />
+                                                        </IconButton>
+                                                    </TableCell>
+                                                )}
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -970,6 +1000,20 @@ const CourseManagePage = () => {
                                                                     Загрузить
                                                                 </Button>
                                                             </TableCell>
+                                                            {isAdmin && (
+                                                                <TableCell>
+                                                                    <IconButton
+                                                                        color="error"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleRemoveStudentFromGroup(student.requestId);
+                                                                        }}
+                                                                        disabled={loading.submit}
+                                                                    >
+                                                                        <Delete />
+                                                                    </IconButton>
+                                                                </TableCell>
+                                                            )}
                                                         </TableRow>
                                                     );
                                                 })}

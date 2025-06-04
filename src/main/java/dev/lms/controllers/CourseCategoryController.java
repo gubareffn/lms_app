@@ -31,5 +31,9 @@ public class CourseCategoryController {
         return ResponseEntity.ok(group);
     }
 
-
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity<?> deleteGroup(@PathVariable Integer id){
+        courseCategoryService.deleteCategory(id);
+        return  ResponseEntity.ok("Group deleted");
+    }
 }

@@ -3,6 +3,7 @@ package dev.lms.service;
 import dev.lms.dto.CourseDetailsDto;
 import dev.lms.dto.CourseShortDto;
 import dev.lms.models.Course;
+import dev.lms.models.Group;
 import dev.lms.models.Worker;
 import dev.lms.repository.CourseCategoryRepository;
 import dev.lms.repository.CourseRepository;
@@ -72,5 +73,12 @@ public class CourseService {
         course.getWorker().add(worker);
 
         return courseRepository.save(course);
+    }
+
+    public void deleteCourse(Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Request not found with id: " + courseId));
+
+        courseRepository.deleteById(courseId);
     }
 }

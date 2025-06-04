@@ -122,6 +122,23 @@ public class RequestController {
         return ResponseEntity.ok(updatedStatus);
     }
 
+    // Удаление пользователя из группы (смена айди группы в заявке на 0)
+    @Transactional
+    @PutMapping("/{requestId}/group")
+    public ResponseEntity<?> deleteStudentFromGroup(@PathVariable Integer requestId) {
+
+        Request updateRequest = requestRepository.findById(requestId).orElse(null);
+        if (updateRequest == null) {
+            return ResponseEntity.status(404).body("Request not found");
+        }
+
+        updateRequest.setGroup(null);
+
+        requestRepository.save(updateRequest);
+        RequestDto updatedGroup = new RequestDto(updateRequest);
+        return ResponseEntity.ok(updatedGroup);
+    }
+
     // Обновление статуса заявки при смене статуса
     @Transactional
     @PutMapping("/{id}/comment")

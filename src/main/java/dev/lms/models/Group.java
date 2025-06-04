@@ -23,7 +23,7 @@ public class Group {
     @Column(name = "max_student_count")
     private Integer maxStudentCount;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 }

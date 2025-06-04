@@ -30,5 +30,10 @@ public class CourseCategoryService {
         return courseCategoryRepository.save(category);
     }
 
+    public void deleteCategory(Integer categoryId) {
+        Category category = courseCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
 
+        courseCategoryRepository.deleteById(categoryId);
+    }
 }

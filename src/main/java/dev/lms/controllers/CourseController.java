@@ -107,7 +107,7 @@ public class CourseController {
             return ResponseEntity.status(403).body("Worker ID not found in token");
         }
         Course course = courseService.createCourse(courseDto, workerId);
-        return ResponseEntity.ok(course);
+        return ResponseEntity.ok(new CourseDetailsDto(course));
     }
 
 
@@ -135,5 +135,11 @@ public class CourseController {
 
         courseRepository.save(updateCourse);
         return ResponseEntity.ok(new CourseDetailsDto(updateCourse));
+    }
+
+    @DeleteMapping("/{courseId}/delete")
+    public ResponseEntity<?> deleteWorker(@PathVariable Long courseId){
+        courseService.deleteCourse(courseId);
+        return  ResponseEntity.ok("Course deleted");
     }
 }

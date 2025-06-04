@@ -132,7 +132,6 @@ interface LoginModalProps {
 
 function LoginModal({ open, onClose }: LoginModalProps) {
     const { login } = useAuth();
-    const theme = useTheme();
     const [error, setError] = useState('');
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'student' | 'worker'>('student');

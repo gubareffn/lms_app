@@ -1,11 +1,13 @@
 package dev.lms.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 
@@ -56,6 +58,15 @@ public class Course {
     )
     private Set<Worker> worker = new HashSet<Worker>();
 
-    //    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
-//    private List<Assignment> assignments = new ArrayList<>();
+//    @JsonIgnore
+//    @OneToMany(mappedBy = "course")
+//    private Set<Assignment> assignments = new LinkedHashSet<>();
+
+//    @OneToMany(mappedBy = "course")
+//    private Set<EducationMaterial> educationalMaterials = new LinkedHashSet<>();
+//
+//    @OneToMany(mappedBy = "course")
+//    private Set<Group> studentGroups = new LinkedHashSet<>();
+
+
 }

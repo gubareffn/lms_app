@@ -120,6 +120,11 @@ const AdminPage = () => {
     const [deleteCourseDialogOpen, setDeleteCourseDialogOpen] = useState(false);
     const [courseToDelete, setCourseToDelete] = useState<number | null>(null);
 
+    // Фильтры и поиск
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [dateFilter, setDateFilter] = useState<string>('all');
+
     const [addStudentDialogOpen, setAddStudentDialogOpen] = useState(false);
     const [addWorkerDialogOpen, setAddWorkerDialogOpen] = useState(false);
     const [newStudent, setNewStudent] = useState<Omit<Student, 'id'>>({
@@ -148,6 +153,39 @@ const AdminPage = () => {
             fetchCourses();
         }
     }, [activeTab]);
+
+    // Функция для фильтрации заявок
+    const filterRequests = (requests: Request[]) => {
+        return requests.filter(request => {
+            // Фильтр по поисковому запросу (студент или курс)
+            const matchesSearch = searchTerm === '' ||
+                request.studentLastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                request.studentFirstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                request.courseName.toLowerCase().includes(searchTerm.toLowerCase());
+
+            // Фильтр по статусу
+            const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
+
+            // Фильтр по дате
+            const now = new Date();
+            const requestDate = new Date(request.createTime);
+            let matchesDate = true;
+
+            if (dateFilter === 'today') {
+                matchesDate = requestDate.toDateString() === now.toDateString();
+            } else if (dateFilter === 'week') {
+                const weekAgo = new Date(now);
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                matchesDate = requestDate >= weekAgo;
+            } else if (dateFilter === 'month') {
+                const monthAgo = new Date(now);
+                monthAgo.setMonth(monthAgo.getMonth() - 1);
+                matchesDate = requestDate >= monthAgo;
+            }
+
+            return matchesSearch && matchesStatus && matchesDate;
+        });
+    };
 
     // Загрузка заявок
     const fetchData = async () => {
@@ -624,8 +662,56 @@ const AdminPage = () => {
                 {activeTab === 'all-requests' && (
                     <Box>
                         <Typography variant="h5" gutterBottom>
-                            Одобрение заявок
+                            Обработка заявок
                         </Typography>
+
+                        <Paper sx={{ p: 2, mb: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                            <TextField
+                                label="Поиск (студент или курс)"
+                                variant="outlined"
+                                size="small"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                sx={{ minWidth: 200 }}
+                            />
+
+                            <Select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                size="small"
+                                sx={{ minWidth: 200 }}
+                            >
+                                <MenuItem value="all">Все статусы</MenuItem>
+                                {statusOptions.map((status) => (
+                                    <MenuItem key={status.id} value={status.name}>
+                                        {status.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+
+                            <Select
+                                value={dateFilter}
+                                onChange={(e) => setDateFilter(e.target.value)}
+                                size="small"
+                                sx={{ minWidth: 200 }}
+                            >
+                                <MenuItem value="all">Все даты</MenuItem>
+                                <MenuItem value="today">Сегодня</MenuItem>
+                                <MenuItem value="week">За неделю</MenuItem>
+                                <MenuItem value="month">За месяц</MenuItem>
+                            </Select>
+
+                            <Button
+                                variant="outlined"
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    setStatusFilter('all');
+                                    setDateFilter('all');
+                                }}
+                            >
+                                Сбросить фильтры
+                            </Button>
+                        </Paper>
 
                         {error && (
                             <Alert severity="error" sx={{mb: 2}} onClose={() => setError(null)}>
@@ -650,14 +736,13 @@ const AdminPage = () => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {requests.map((request) => {
+                                    {filterRequests(requests).map((request) => {
                                         const editedRequest = editableRequests[request.id] || {};
                                         const currentStatus = editedRequest.status !== undefined ? editedRequest.status : request.status;
                                         const currentGroupId = editedRequest.groupId !== undefined ? editedRequest.groupId : request.groupId;
 
                                         return (
                                             <TableRow key={request.id}>
-                                                {/*<TableCell>{request.id}</TableCell>*/}
                                                 <TableCell>
                                                     <Link
                                                         component="button"
@@ -851,7 +936,6 @@ const AdminPage = () => {
                                 <Table>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell>ID</TableCell>
                                             <TableCell>ФИО</TableCell>
                                             <TableCell>Email</TableCell>
                                             <TableCell>Действия</TableCell>
@@ -867,7 +951,6 @@ const AdminPage = () => {
                                         ) : (
                                             students.map(student => (
                                                 <TableRow key={student.id}>
-                                                    <TableCell>{student.id}</TableCell>
                                                     <TableCell>
                                                         <Link
                                                             component="button"
@@ -899,7 +982,6 @@ const AdminPage = () => {
                                 <Table>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell>ID</TableCell>
                                             <TableCell>ФИО</TableCell>
                                             <TableCell>Email</TableCell>
                                             <TableCell>Роль</TableCell>
@@ -916,7 +998,6 @@ const AdminPage = () => {
                                         ) : (
                                             employees.map(worker => (
                                                 <TableRow key={worker.id}>
-                                                    <TableCell>{worker.id}</TableCell>
                                                     <TableCell>
                                                         <Link
                                                             component="button"
@@ -960,10 +1041,11 @@ const AdminPage = () => {
                             </Alert>
                         )}
 
+
                         <Button
                             variant="contained"
                             startIcon={<AddIcon/>}
-                            onClick={() => navigate('/courses/create')}
+                            onClick={() => navigate('/teaching/create-course')}
                             sx={{mb: 2}}
                         >
                             Создать курс
@@ -981,7 +1063,6 @@ const AdminPage = () => {
                                         <TableCell>Категория</TableCell>
                                         <TableCell>Дата начала</TableCell>
                                         <TableCell>Дата окончания</TableCell>
-                                        <TableCell>Действия</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -1024,20 +1105,6 @@ const AdminPage = () => {
                                                     <TableCell>{course.category}</TableCell>
                                                     <TableCell>{course.startDate}</TableCell>
                                                     <TableCell>{course.endDate}</TableCell>
-                                                    <TableCell>
-                                                        <IconButton
-                                                            color="primary"
-                                                            onClick={() => navigate(`/courses/${course.id}/edit`)}
-                                                        >
-                                                            <EditIcon />
-                                                        </IconButton>
-                                                        <IconButton
-                                                            color="error"
-                                                            onClick={() => handleDeleteCourseClick(course.id)}
-                                                        >
-                                                            <Delete />
-                                                        </IconButton>
-                                                    </TableCell>
                                                 </TableRow>
                                                 {expandedCourseId === course.id && (
                                                     <TableRow>

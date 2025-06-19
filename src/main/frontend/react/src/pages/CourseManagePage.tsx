@@ -3,9 +3,23 @@ import {
     Box, Typography, Divider, Paper, TextField, Button,
     Stack, IconButton, CircularProgress, Alert, List, ListItem,
     Tabs, Tab, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Chip, Select, MenuItem, LinearProgress, Modal
+    TableHead, TableRow, Chip, Select, MenuItem, LinearProgress, Modal, ListItemText
 } from '@mui/material';
-import {Add, Delete, Edit, Save, Cancel, People, Book, Group, Check, Close} from '@mui/icons-material';
+import {
+    Add,
+    Delete,
+    Edit,
+    Save,
+    Cancel,
+    People,
+    Book,
+    Group,
+    Check,
+    Close,
+    ExpandLess,
+    ExpandMore,
+    InsertDriveFile as FileIcon,
+} from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../components/AuthContext';
@@ -35,6 +49,52 @@ interface Group {
     name: string;
     maxStudentCount: number;
     studentCount: number;
+}
+
+interface TaskFile {
+    id: number;
+    name: string;
+    url: string;
+    uploadDate: string;
+}
+
+interface AttachedFileDto {
+    id: number;
+    fileName: string;
+    filePath: string;
+    uploadDate: string;
+}
+
+interface Task {
+    id?: number;
+    assignmentName: string;
+    assignmentDescription: string;
+    deadline?: string;
+    isNew?: boolean;
+    fileUrl?: string;
+    files?: TaskFile[];
+}
+
+interface Solution {
+    id: number;
+    sendingDate: string;
+    solutionComment: string;
+    solutionScore: number | null;
+    workerId: number;
+    assignmentId: number;
+    studentId: number;
+    statusId: number;
+    studentName?: string;
+    studentMiddleName: string
+    studentLastName: string
+}
+
+interface ExpandedTask {
+    taskId: number;
+    isExpanded: boolean;
+    solutions: Solution[];
+    loading: boolean;
+    error: string | null;
 }
 
 interface Student {
@@ -70,6 +130,10 @@ interface DocumentType {
     name: string;
 }
 
+interface GradeSolutionRequest {
+    solutionScore: number;
+}
+
 const CourseManagePage = () => {
     const { id } = useParams<{ id: string }>();
     const { user } = useAuth();
@@ -85,6 +149,7 @@ const CourseManagePage = () => {
         materials: true,
         groups: true,
         statuses: true,
+        tasks: true,
         submit: false,
         materialSaving: false
     });
@@ -114,12 +179,205 @@ const CourseManagePage = () => {
     const [selectedDocType, setSelectedDocType] = useState<number | null>(null);
     const [loadingDocTypes, setLoadingDocTypes] = useState(false)
 
+    // задания
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [loadingTasks, setLoadingTasks] = useState(false);
+    const [editTasksMode, setEditTasksMode] = useState(false);
+    const [taskFile, setTaskFile] = useState<File | null>(null);
+    const [solutions, setSolutions] = useState<Solution[]>([]);
+
     const [createGroupModalOpen, setCreateGroupModalOpen] = useState(false);
     const [newGroup, setNewGroup] = useState({
         name: '',
         maxStudentCount: 20,
         courseId: Number(id)
     });
+
+    interface SolutionsTableProps {
+        solutions: Solution[];
+        onGradeSolution: (solutionId: number, score: number) => Promise<void>;
+        loading: boolean;
+    }
+
+    const SolutionsTable: React.FC<SolutionsTableProps> = ({
+                                                               solutions,
+                                                               onGradeSolution,
+                                                               loading
+                                                           }) => {
+        const [editingSolutionId, setEditingSolutionId] = useState<number | null>(null);
+        const [scoreInputs, setScoreInputs] = useState<Record<number, number>>({});
+
+        const handleScoreChange = (solutionId: number, value: string) => {
+            const numValue = parseInt(value);
+            setScoreInputs(prev => ({
+                ...prev,
+                [solutionId]: isNaN(numValue) ? 0 : numValue
+            }));
+        };
+
+        const handleSaveScore = async (solutionId: number) => {
+            try {
+                const score = scoreInputs[solutionId];
+                if (score === undefined || score < 0 || score > 100) {
+                    alert('Оценка должна быть от 0 до 100');
+                    return;
+                }
+
+                await onGradeSolution(solutionId, score);
+                setEditingSolutionId(null);
+            } catch (error) {
+                console.error('Error saving score:', error);
+            }
+        };
+
+        if (loading) {
+            return <CircularProgress />;
+        }
+
+        if (solutions.length === 0) {
+            return <Typography>Нет отправленных решений</Typography>;
+        }
+
+        return (
+            <TableContainer component={Paper}>
+                <Table size="small">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Студент</TableCell>
+                            <TableCell>Дата отправки</TableCell>
+                            <TableCell>Решение</TableCell>
+                            <TableCell>Текущая оценка</TableCell>
+                            <TableCell>Действия</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {solutions.map((solution: Solution) => (
+                            <TableRow key={solution.id}>
+                                <TableCell>
+                                    {solution.studentName + ' ' + solution.studentMiddleName + ' ' + solution.studentLastName || `Студент ${solution.studentId}`}
+                                </TableCell>
+                                <TableCell>
+                                    {new Date(solution.sendingDate).toLocaleString()}
+                                </TableCell>
+                                <TableCell>
+                                    {solution.solutionComment || '-'}
+                                </TableCell>
+                                <TableCell>
+                                    {solution.solutionScore !== null ?
+                                        solution.solutionScore :
+                                        'Не оценено'}
+                                </TableCell>
+                                <TableCell>
+                                    {editingSolutionId === solution.id ? (
+                                        <Stack direction="row" spacing={1} alignItems="center">
+                                            <TextField
+                                                type="number"
+                                                size="small"
+                                                value={scoreInputs[solution.id] ?? (solution.solutionScore || 0)}
+                                                onChange={(e) => handleScoreChange(solution.id, e.target.value)}
+                                                inputProps={{
+                                                    min: 0,
+                                                    max: 100,
+                                                    style: { width: '60px' }
+                                                }}
+                                            />
+                                            <IconButton
+                                                color="primary"
+                                                onClick={() => handleSaveScore(solution.id)}
+                                            >
+                                                <Check />
+                                            </IconButton>
+                                            <IconButton
+                                                color="error"
+                                                onClick={() => setEditingSolutionId(null)}
+                                            >
+                                                <Close />
+                                            </IconButton>
+                                        </Stack>
+                                    ) : (
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            onClick={() => {
+                                                setEditingSolutionId(solution.id);
+                                                setScoreInputs(prev => ({
+                                                    ...prev,
+                                                    [solution.id]: solution.solutionScore || 0
+                                                }));
+                                            }}
+                                        >
+                                            {solution.solutionScore !== null ? 'Изменить' : 'Оценить'}
+                                        </Button>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        );
+    };
+
+    const [expandedTasks, setExpandedTasks] = useState<Record<number, ExpandedTask>>({});
+
+    const downloadFile = async (filename: string) => {
+        try {
+            const response = await axios.get(
+                `http://localhost:8080/api/files/download/${encodeURIComponent(filename)}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`
+                    },
+                    responseType: 'blob'
+                }
+            );
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Ошибка при скачивании файла:', err);
+            setError('Не удалось скачать файл');
+        }
+    };
+
+    const TaskFilesList = ({ files }: { files: TaskFile[] }) => {
+        if (!files || files.length === 0) {
+            return <Typography variant="body2" color="text.secondary">Нет прикрепленных файлов</Typography>;
+        }
+
+        return (
+            <Box sx={{ mt: 1 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
+                    Прикрепленные файлы:
+                </Typography>
+                <List dense sx={{ bgcolor: 'action.hover', borderRadius: 1 }}>
+                    {files.map(file => {
+                        // Извлекаем оригинальное имя файла (без пути)
+                        const originalFileName = file.name.split('_').pop() || file.name;
+
+                        return (
+                            <ListItem
+                                key={file.id}
+                                sx={{ py: 1, cursor: 'pointer' }}
+                                onClick={() => downloadFile(file.name)}
+                            >
+
+                                <ListItemText
+                                    primary={originalFileName}
+                                />
+                            </ListItem>
+                        );
+                    })}
+                </List>
+            </Box>
+        );
+    };
 
     useEffect(() => {
         const fetchCourseData = async () => {
@@ -129,22 +387,54 @@ const CourseManagePage = () => {
                     materials: true,
                     groups: true,
                     statuses: true,
+                    tasks: true,
                     submit: false,
                     materialSaving: false
                 });
                 setError(null);
-
-                const [courseResponse, materialsResponse, groupsResponse, statusesResponse] = await Promise.all([
+                const [courseResponse, materialsResponse, groupsResponse, statusesResponse, tasksResponse] = await Promise.all([
                     axios.get(`http://localhost:8080/api/courses/${id}`),
                     axios.get(`http://localhost:8080/api/material/${id}`),
                     axios.get(`http://localhost:8080/api/groups/${id}`),
-                    axios.get(`http://localhost:8080/api/progress/status`)
+                    axios.get(`http://localhost:8080/api/progress/status`),
+                    axios.get(`http://localhost:8080/api/assignments/${id}`)
                 ]);
+
+                const tasksWithFiles = await Promise.all(
+                    tasksResponse.data.map(async (task: Task) => {
+                        try {
+                            const filesResponse = await axios.get<AttachedFileDto[]>(
+                                `http://localhost:8080/api/files/assignment/${task.id}`,
+                                {
+                                    headers: {
+                                        'Authorization': `Bearer ${user?.token}`
+                                    }
+                                }
+                            );
+                            return {
+                                ...task,
+                                files: filesResponse.data.map(file => ({
+                                    id: file.id,
+                                    name: file.fileName,
+                                    url: file.filePath,
+                                    uploadDate: file.uploadDate
+                                }))
+                            };
+                        } catch (err) {
+                            console.error(`Ошибка при загрузке файлов для задания ${task.id}:`, err);
+                            return {
+                                ...task,
+                                files: []
+                            };
+                        }
+                    })
+                );
 
                 setCourse(courseResponse.data);
                 setMaterials(materialsResponse.data || []);
                 setGroups(groupsResponse.data || []);
                 setLearningStatuses(statusesResponse.data || []);
+                setTasks(tasksWithFiles || []);
             } catch (err) {
                 setError('Не удалось загрузить данные курса');
                 console.error(err);
@@ -154,13 +444,59 @@ const CourseManagePage = () => {
                     course: false,
                     materials: false,
                     groups: false,
-                    statuses: false
+                    statuses: false,
+                    tasks: false
                 }));
             }
         };
 
         fetchCourseData();
     }, [id]);
+
+    // Обработчики для заданий
+    const handleTaskChange = (index: number, field: keyof Task, value: string) => {
+        const newTasks = [...tasks];
+        newTasks[index] = { ...newTasks[index], [field]: value };
+        setTasks(newTasks);
+    };
+
+    const handleAddTask = () => {
+        setTasks([...tasks, { assignmentName: '', assignmentDescription: '', isNew: true }]);
+    };
+
+
+    const handleRemoveTask = async (index: number) => {
+        const task = tasks[index];
+
+        if (task.id) {
+            try {
+                await axios.delete(
+                    `http://localhost:8080/api/tasks/${task.id}/delete`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${user?.token}`
+                        }
+                    }
+                );
+
+                const newTasks = tasks.filter((_, i) => i !== index);
+                setTasks(newTasks);
+            } catch (err) {
+                setError('Ошибка при удалении задания');
+                console.error(err);
+            }
+        } else {
+            const newTasks = tasks.filter((_, i) => i !== index);
+            setTasks(newTasks);
+        }
+    };
+
+    const handleTaskFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        if (e.target.files && e.target.files[0]) {
+            setTaskFile(e.target.files[0]);
+        }
+    };
+
 
     const handleCreateGroup = async () => {
         try {
@@ -245,7 +581,6 @@ const CourseManagePage = () => {
         }
     }, [selectedGroup, id]);
 
-
     const handleOpenUploadModal = (studentId: number) => {
         setSelectedStudentId(studentId);
         setUploadModalOpen(true);
@@ -269,7 +604,7 @@ const CourseManagePage = () => {
         }
     };
 
-// Загрузка файла
+    // Загрузка файла
     const handleFileUpload = async () => {
         if (!file || !selectedStudentId || !selectedDocType) {
             setError('Выберите файл и тип документа');
@@ -357,6 +692,199 @@ const CourseManagePage = () => {
 
     const handleAddMaterial = () => {
         setMaterials([...materials, { name: '', text: '', isNew: true }]);
+    };
+
+    const handleTaskClick = (taskId: number) => {
+        setExpandedTasks(prev => {
+            const isCurrentlyExpanded = prev[taskId]?.isExpanded || false;
+
+            return {
+                ...prev,
+                [taskId]: {
+                    ...prev[taskId],
+                    isExpanded: !isCurrentlyExpanded,
+                    solutions: !isCurrentlyExpanded ? [] : prev[taskId]?.solutions || [],
+                    loading: !isCurrentlyExpanded,
+                    error: null
+                }
+            };
+        });
+
+        if (!expandedTasks[taskId]?.isExpanded) {
+            fetchSolutions(taskId);
+        }
+    };
+
+    const fetchSolutions = async (assignmentId: number) => {
+        try {
+            setExpandedTasks(prev => ({
+                ...prev,
+                [assignmentId]: {
+                    ...prev[assignmentId],
+                    loading: true,
+                    error: null
+                }
+            }));
+
+            const response = await axios.get(
+                `http://localhost:8080/api/solutions/${assignmentId}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`
+                    }
+                }
+            );
+
+            setExpandedTasks(prev => ({
+                ...prev,
+                [assignmentId]: {
+                    ...prev[assignmentId],
+                    solutions: response.data,
+                    loading: false
+                }
+            }));
+        } catch (err) {
+            setExpandedTasks(prev => ({
+                ...prev,
+                [assignmentId]: {
+                    ...prev[assignmentId],
+                    loading: false,
+                    error: 'Не удалось загрузить решения'
+                }
+            }));
+            console.error(err);
+        }
+    };
+
+    const handleGradeSolution = async (solutionId: number, score: number) => {
+        try {
+            setExpandedTasks(prev => {
+                const taskId = Object.keys(prev).find(key =>
+                    prev[Number(key)].solutions.some(s => s.id === solutionId)
+                );
+
+                if (!taskId) return prev;
+
+                return {
+                    ...prev,
+                    [taskId]: {
+                        ...prev[Number(taskId)],
+                        solutions: prev[Number(taskId)].solutions.map(sol =>
+                            sol.id === solutionId ? { ...sol, solutionScore: score } : sol
+                        )
+                    }
+                };
+            });
+
+            const requestData: GradeSolutionRequest = {
+                solutionScore: score
+            };
+
+            const response = await axios.put(
+                `http://localhost:8080/api/solutions/${solutionId}/grade`,
+                requestData,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+        } catch (err) {
+            console.error('Ошибка при оценке решения:', err);
+            setExpandedTasks(prev => ({ ...prev }));
+            throw err;
+        }
+    };
+
+    const handleUploadTaskFile = async (taskId: number) => {
+        if (!taskFile) return;
+
+        try {
+            const formData = new FormData();
+            formData.append('file', taskFile);
+            formData.append('taskId', taskId.toString());
+
+            await axios.post(
+                `http://localhost:8080/api/files/upload/task/${taskId}`,
+                formData,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${user?.token}`,
+                    }
+                }
+            );
+
+            setTaskFile(null);
+            alert('Файл задания успешно загружен!');
+
+        } catch (err) {
+            setError('Ошибка при загрузке файла задания');
+            console.error(err);
+        }
+    };
+
+    const handleSaveTask = async (index: number) => {
+        const task = tasks[index];
+
+        if (!task.assignmentName || !task.assignmentDescription) {
+            setError('Название и описание задания обязательны');
+            return;
+        }
+
+        try {
+            setLoading(prev => ({ ...prev, submit: true }));
+            setError(null);
+
+            const requestData = {
+                assignmentName: task.assignmentName,
+                assignmentDescription: task.assignmentDescription,
+                deadline: task.deadline || null,
+                courseId: id,
+            };
+            let savedTask;
+
+            if (task.isNew) {
+                const response = await axios.post(
+                    `http://localhost:8080/api/assignments/${id}/add`,
+                    requestData,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${user?.token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                savedTask = response.data;
+            } else {
+                const response = await axios.put(
+                    `http://localhost:8080/api/assignments/${task.id}/update`,
+                    requestData,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${user?.token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                savedTask = response.data;
+            }
+
+            const newTasks = [...tasks];
+            newTasks[index] = { ...savedTask };
+            setTasks(newTasks);
+
+            if (taskFile) {
+                await handleUploadTaskFile(savedTask.id);
+            }
+
+        } catch (err) {
+            setError('Ошибка при сохранении задания');
+            console.error(err);
+        } finally {
+            setLoading(prev => ({ ...prev, submit: false }));
+        }
     };
 
     const handleSaveMaterial = async (index: number) => {
@@ -533,6 +1061,7 @@ const CourseManagePage = () => {
                 <Tab label="Информация" value="info"/>
                 <Tab label="Материалы" value="materials"/>
                 <Tab label="Группы" value="groups"/>
+                <Tab label="Задания" value="tasks"/>
             </Tabs>
 
             {activeTab === 'info' && (
@@ -1026,6 +1555,207 @@ const CourseManagePage = () => {
                     </Stack>
                 </Box>
             )}
+            {activeTab === 'tasks' && (
+                <Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                        {editTasksMode ? (
+                            <Stack direction="row" spacing={2}>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<Cancel />}
+                                    onClick={() => setEditTasksMode(false)}
+                                >
+                                    Завершить редактирование
+                                </Button>
+                            </Stack>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                startIcon={<Edit />}
+                                onClick={() => setEditTasksMode(true)}
+                            >
+                                Редактировать задания
+                            </Button>
+                        )}
+                    </Box>
+
+                    {editTasksMode ? (
+                        <>
+                            <Typography variant="h6">Задания курса</Typography>
+                            <Divider sx={{ my: 2 }} />
+
+                            {tasks.map((task, index) => (
+                                <Paper key={index} elevation={2} sx={{ p: 2, mb: 2 }}>
+                                    <Box sx={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        mb: 2
+                                    }}>
+                                        <Typography>
+                                            {task.isNew ? 'Новое задание' : `Задание ${task.id}`}
+                                        </Typography>
+                                        <Stack direction="row" spacing={1}>
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                onClick={() => handleSaveTask(index)}
+                                                disabled={loading.submit || !task.assignmentName || !task.assignmentDescription}
+                                                startIcon={loading.submit ? <CircularProgress size={20} /> : <Save />}
+                                            >
+                                                Сохранить
+                                            </Button>
+                                            <IconButton
+                                                onClick={() => handleRemoveTask(index)}
+                                                color="error"
+                                            >
+                                                <Delete />
+                                            </IconButton>
+                                        </Stack>
+                                    </Box>
+
+                                    <Stack spacing={2}>
+                                        <TextField
+                                            label="Название задания"
+                                            value={task.assignmentName}
+                                            onChange={(e) => handleTaskChange(index, 'assignmentName', e.target.value)}
+                                            fullWidth
+                                            required
+                                            error={!task.assignmentName}
+                                            helperText={!task.assignmentName ? 'Обязательное поле' : ''}
+                                        />
+
+                                        <TextField
+                                            label="Описание"
+                                            value={task.assignmentDescription}
+                                            onChange={(e) => handleTaskChange(index, 'assignmentDescription', e.target.value)}
+                                            multiline
+                                            rows={4}
+                                            fullWidth
+                                            required
+                                            error={!task.assignmentDescription}
+                                            helperText={!task.assignmentDescription ? 'Обязательное поле' : ''}
+                                        />
+
+                                        <TextField
+                                            label="Срок выполнения"
+                                            type="datetime-local"
+                                            value={task.deadline || ''}
+                                            onChange={(e) => handleTaskChange(index, 'deadline', e.target.value)}
+                                            fullWidth
+                                            InputLabelProps={{
+                                                shrink: true,
+                                            }}
+                                        />
+
+                                        <Box>
+                                            <Typography variant="subtitle2" gutterBottom>
+                                                Прикрепленный файл:
+                                            </Typography>
+                                            {task.fileUrl ? (
+                                                <Typography>
+                                                    <a href={task.fileUrl} target="_blank" rel="noopener noreferrer">
+                                                        Скачать файл
+                                                    </a>
+                                                </Typography>
+                                            ) : (
+                                                <Typography>Файл не прикреплен</Typography>
+                                            )}
+                                            <Button
+                                                variant="outlined"
+                                                component="label"
+                                                size="small"
+                                                sx={{ mt: 1 }}
+                                            >
+                                                Заменить файл
+                                                <input
+                                                    type="file"
+                                                    hidden
+                                                    onChange={(e) => handleTaskFileChange(e, index)}
+                                                />
+                                            </Button>
+                                            {taskFile && (
+                                                <Typography variant="caption" sx={{ ml: 1 }}>
+                                                    {taskFile.name}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </Stack>
+                                </Paper>
+                            ))}
+
+                            <Button
+                                variant="outlined"
+                                startIcon={<Add />}
+                                onClick={handleAddTask}
+                                sx={{ alignSelf: 'flex-start', mt: 2 }}
+                            >
+                                Добавить задание
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Typography variant="h6">Задания курса</Typography>
+                            <Divider sx={{my: 2}}/>
+
+                            {tasks.length === 0 ? (
+                                <Typography>Задания курса отсутствуют</Typography>
+                            ) : (
+                                <List>
+                                    {tasks.map((task, index) => (
+                                        <Paper key={task.id} elevation={2} sx={{p: 2, mb: 2}}>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    cursor: 'pointer'
+                                                }}
+                                                onClick={() => task.id && handleTaskClick(task.id)}
+                                            >
+                                                <Box sx={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
+                                                    <Box>
+                                                        <Typography variant="h6">{task.assignmentName}</Typography>
+                                                        <Typography variant="subtitle2" color="text.secondary"
+                                                                    gutterBottom>
+                                                            {task.deadline && `Срок выполнения: ${new Date(task.deadline).toLocaleString()}`}
+                                                        </Typography>
+                                                    </Box>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            task.id && handleTaskClick(task.id);
+                                                        }}
+                                                    >
+                                                        {expandedTasks[task.id!]?.isExpanded ? <ExpandLess/> :
+                                                            <ExpandMore/>}
+                                                    </IconButton>
+                                                </Box>
+                                            </Box>
+
+                                            <Typography paragraph>{task.assignmentDescription}</Typography>
+
+                                            {/* Добавляем отображение файлов задания */}
+                                            <TaskFilesList files={task.files || []} />
+
+                                            {task.id && expandedTasks[task.id]?.isExpanded && (
+                                                <Box sx={{ mt: 2 }}>
+                                                    <SolutionsTable
+                                                        solutions={expandedTasks[task.id].solutions}
+                                                        onGradeSolution={handleGradeSolution}
+                                                        loading={expandedTasks[task.id].loading}
+                                                    />
+                                                </Box>
+                                            )}
+                                        </Paper>
+                                    ))}
+                                </List>
+                            )}
+                        </>
+                    )}
+                </Box>
+            )}
+
             <Modal open={uploadModalOpen} onClose={() => setUploadModalOpen(false)}>
                 <Box sx={{
                     position: 'absolute',

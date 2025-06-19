@@ -26,7 +26,7 @@ const StudentRequestList = () => {
         status: string;
         createTime: string;
         requestText: string | null;
-        courseName: string;       // Плоские поля вместо вложенного course
+        courseName: string;
         studyDirection: string;
     }
 
@@ -64,7 +64,6 @@ const StudentRequestList = () => {
             <Table>
                 <TableHead>
                     <TableRow>
-                        <TableCell>ID</TableCell>
                         <TableCell>Курс</TableCell>
                         <TableCell>Статус</TableCell>
                         <TableCell>Комментарий</TableCell>
@@ -75,7 +74,6 @@ const StudentRequestList = () => {
                 <TableBody>
                     {requests.map((request) => (
                         <TableRow key={request.id}>
-                            <TableCell>{request.id}</TableCell>
                             <TableCell>{request.courseName}</TableCell>
                             <TableCell>{request.status}</TableCell>
                             <TableCell>{request.requestText}</TableCell>

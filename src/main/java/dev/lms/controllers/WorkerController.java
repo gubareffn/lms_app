@@ -33,16 +33,6 @@ public class WorkerController {
         return workerService.getAllWorkers();
     }
 
-    @GetMapping("/teachers")
-    public List<Worker> getTeachers() {
-        return workerService.getAllTeachers();
-    }
-
-    @GetMapping("/admins")
-    public List<Worker> getAdmins() {
-        return workerService.getAllAdmins();
-    }
-
     // Добавление работника
     @Transactional
     @PostMapping("/create")

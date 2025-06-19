@@ -16,9 +16,6 @@ public class Request {
     @Column(name = "request_id")
     private Integer id;
 
-//    @Column(name = "number")
-//    private Integer number;
-
     @Column(name = "create_time")
     private LocalDateTime createTime;
 
@@ -47,8 +44,4 @@ public class Request {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_status_id", nullable = false)
     private RequestStatus status;
-
-
-
-
 }

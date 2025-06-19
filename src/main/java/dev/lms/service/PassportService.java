@@ -22,6 +22,4 @@ public class PassportService {
     public Passport getPassportByStudentId(Integer studentId) {
         return passportRepository.findByStudentId(studentId);
     }
-
-
 }

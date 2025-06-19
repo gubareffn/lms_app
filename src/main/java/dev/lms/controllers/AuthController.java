@@ -29,15 +29,8 @@ public class AuthController {
         return ResponseEntity.ok(authService.authenticateStudent(request));
     }
 
-//    @PostMapping("/register/worker")
-//    public ResponseEntity<AuthResponse> register(@RequestBody Worker worker) {
-//        return ResponseEntity.ok(authService.registerWorker(worker));
-//    }
-
     @PostMapping("/login/worker")
     public ResponseEntity<AuthResponse> loginWorker(@RequestBody AuthRequest request) {
         return ResponseEntity.ok(authService.authenticateWorker(request));
     }
-
-
 }

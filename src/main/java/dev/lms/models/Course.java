@@ -57,16 +57,4 @@ public class Course {
             inverseJoinColumns = @JoinColumn(name = "worker_id")
     )
     private Set<Worker> worker = new HashSet<Worker>();
-
-//    @JsonIgnore
-//    @OneToMany(mappedBy = "course")
-//    private Set<Assignment> assignments = new LinkedHashSet<>();
-
-//    @OneToMany(mappedBy = "course")
-//    private Set<EducationMaterial> educationalMaterials = new LinkedHashSet<>();
-//
-//    @OneToMany(mappedBy = "course")
-//    private Set<Group> studentGroups = new LinkedHashSet<>();
-
-
 }

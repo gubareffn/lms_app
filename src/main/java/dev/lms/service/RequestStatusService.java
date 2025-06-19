@@ -17,5 +17,4 @@ public class RequestStatusService {
     public List<RequestStatus> getAll() {
         return requestStatusRepository.findAll();
     }
-
 }

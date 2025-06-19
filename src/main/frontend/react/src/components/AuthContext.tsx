@@ -4,7 +4,6 @@ import axios from 'axios';
 // Типы
 type UserData = {
     id: string;
-    // name: string;
     email: string;
     token: string;
     userType: string;

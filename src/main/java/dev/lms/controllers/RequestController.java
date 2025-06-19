@@ -116,7 +116,6 @@ public class RequestController {
         updateRequest.setWorker(worker);
         updateRequest.setGroup(group);
         updateRequest.setStatus(updateStatus);
-
         requestRepository.save(updateRequest);
         RequestDto updatedStatus = new RequestDto(updateRequest);
         return ResponseEntity.ok(updatedStatus);

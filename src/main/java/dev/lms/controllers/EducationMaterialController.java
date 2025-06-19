@@ -47,7 +47,7 @@ public class EducationMaterialController {
     }
 
     @PutMapping("/{id}/update")
-    public ResponseEntity<?> updateRequest(@PathVariable Integer id,
+    public ResponseEntity<?> updateMaterial(@PathVariable Integer id,
                                            @RequestBody Map<String, String> requestBody) {
 
         EducationMaterial updateMaterial = educationMaterialRepository.findById(id).orElse(null);

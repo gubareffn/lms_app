@@ -34,16 +34,4 @@ public class Student {
 
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email;
-
-//    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
-//    private Passport passport;
-
-//    @OneToOne(mappedBy = "passport_id", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private Passport passport;
-
-//    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
-//    private Set<Document> documents = new HashSet<>();\
-
-//    @OneToMany(mappedBy = "student")
-//    private Set<Solution> solutions = new HashSet<>();
 }

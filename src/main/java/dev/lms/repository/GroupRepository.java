@@ -12,6 +12,4 @@ import java.util.List;
 public interface GroupRepository extends JpaRepository<Group, Integer> {
     @Query("SELECT g FROM Group g WHERE g.course.id = :id")
     List<Group> findAllByCourseId(@Param("id") Integer id);
-
-//    List<Group> findAllByCourseId(Integer courseId);
 }
